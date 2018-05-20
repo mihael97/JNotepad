@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import hr.fer.zemris.java.hw11.jnotepadpp.JNotepadPP;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProviderBridge;
 
 /**
  * Public class represents action for document opening
@@ -38,15 +39,25 @@ public class OpenDocumentAction extends AbstractAction {
 	private MultipleDocumentModel model;
 
 	/**
+	 * Reference to bridge with {@link LocalizationProvider}
+	 */
+	private LocalizationProviderBridge provider;
+
+	/**
 	 * Public constructor which accepts frame where action is performed
 	 * 
 	 * @param frame
 	 *            - frame
 	 * @param documentModel
+	 *            - document model
+	 * @param provider
+	 *            - language provider
 	 */
-	public OpenDocumentAction(JNotepadPP frame, MultipleDocumentModel documentModel) {
+	public OpenDocumentAction(JNotepadPP frame, MultipleDocumentModel documentModel,
+			LocalizationProviderBridge provider) {
 		this.frame = Objects.requireNonNull(frame);
-		this.model = documentModel;
+		this.model = Objects.requireNonNull(documentModel);
+		this.provider = Objects.requireNonNull(provider);
 	}
 
 	/**
@@ -69,9 +80,8 @@ public class OpenDocumentAction extends AbstractAction {
 
 		if (!Files.isReadable(filePath)) {
 			JOptionPane.showMessageDialog(frame,
-					LocalizationProvider.getInstance().getString("exit1") + fileName.getAbsolutePath()
-							+ LocalizationProvider.getInstance().getString("open1"),
-					LocalizationProvider.getInstance().getString("error"), JOptionPane.ERROR_MESSAGE);
+					provider.getString("exit1") + fileName.getAbsolutePath() + provider.getString("open1"),
+					provider.getString("error"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 

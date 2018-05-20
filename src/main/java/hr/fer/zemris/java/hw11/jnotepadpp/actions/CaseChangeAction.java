@@ -10,18 +10,54 @@ import javax.swing.text.Document;
 
 import hr.fer.zemris.java.hw11.jnotepadpp.DefaultMultipleDocumentModel;
 
+/**
+ * Class represents action for changing of selected text to same case type.
+ * Supported cases are: <br>
+ * upper case <br>
+ * lower case<br>
+ * invert case
+ * 
+ * @author Mihael
+ *
+ */
 public class CaseChangeAction extends AbstractAction {
 
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Reference to {@link DefaultMultipleDocumentModel} where current document is
+	 * stored
+	 */
 	private DefaultMultipleDocumentModel documentModel;
+	/**
+	 * Flag represents which case change we want
+	 */
 	private CaseEnum flag;
 
+	/**
+	 * Constructor for new font case changer
+	 * 
+	 * @param documentModel
+	 *            - {@link DefaultMultipleDocumentModel}
+	 * @param b
+	 *            - type of case we want
+	 */
 	public CaseChangeAction(DefaultMultipleDocumentModel documentModel, CaseEnum b) {
 		this.documentModel = Objects.requireNonNull(documentModel);
 		this.flag = Objects.requireNonNull(b);
 	}
 
+	/**
+	 * Method represents action for case changing
+	 * 
+	 * @param event
+	 *            - {@link ActionEvent}
+	 */
 	@Override
-	public void actionPerformed(ActionEvent arg0) {
+	public void actionPerformed(ActionEvent event) {
 		JTextArea editor = documentModel.getCurrentDocument().getTextComponent();
 		Document doc = editor.getDocument();
 
@@ -46,6 +82,13 @@ public class CaseChangeAction extends AbstractAction {
 		}
 	}
 
+	/**
+	 * Method changes value to specified type
+	 * 
+	 * @param text
+	 *            - previous text
+	 * @return changed text
+	 */
 	private String changeCase(String text) {
 		char[] chars = text.toCharArray();
 
