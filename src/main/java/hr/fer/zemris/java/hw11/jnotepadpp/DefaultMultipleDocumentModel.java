@@ -124,12 +124,13 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		model.addSingleDocumentListener(this);
 		model.setModified(false);
 		documents.add(model);
-		current = model;
 
+		// callListeners(model, null, 2);
+		// callListeners(model, current, 1);
+		current = model;
 		this.add(path.getFileName().toString(), new JScrollPane(current.getTextComponent()));
 		this.setSelectedIndex(this.getTabCount() - 1);
 
-		callListeners(model, null, 2);
 		return model;
 
 	}
@@ -159,7 +160,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		}
 
 		model.setModified(false);
-		this.getSelectedComponent().setName(model.getFilePath().getFileName().toString());
+		this.getSelectedComponent().setName(newPath.getFileName().toString());
 		callListeners(model, current, 1);
 		current = model;
 	}
@@ -176,15 +177,14 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			return;
 		}
 
-		if (documents.size() - 1 == 0) {
-			createNewDocument();
-		}
-		this.remove(documents.indexOf(model));
-
 		documents.remove(model);
-		current = documents.get(documents.size() - 1);
+		if (documents.size() != 0)
+			current = documents.get(documents.size() - 1);
+		else
+			current = null;
 		callListeners(null, model, 3);
 		callListeners(current, null, 2);
+		this.remove(this.getSelectedComponent());
 	}
 
 	/**
@@ -275,9 +275,14 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	private void addListeners() {
 		this.addChangeListener(e -> {
 
-			if (documents.size() != 0)
-				callListeners(documents.get(this.getSelectedIndex()), current, 1);
-			current = documents.get(this.getSelectedIndex());
+			if (documents.size() != 0) {
+				if (this.getSelectedIndex() != -1)
+					callListeners(documents.get(this.getSelectedIndex()), current, 1);
+				else
+					callListeners(documents.get(0), current, 1);
+
+				current = documents.get(this.getSelectedIndex());
+			}
 		});
 	}
 

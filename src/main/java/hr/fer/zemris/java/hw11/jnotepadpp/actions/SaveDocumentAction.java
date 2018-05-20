@@ -96,7 +96,7 @@ public class SaveDocumentAction extends AbstractAction {
 		}
 
 		documentModel.saveDocument(document, document.getFilePath());
-		JOptionPane.showMessageDialog(frame, provider.getString("fileStored"), provider.getString("Information"),
+		JOptionPane.showMessageDialog(frame, provider.getString("fileStored"), provider.getString("information"),
 				JOptionPane.INFORMATION_MESSAGE);
 
 	}

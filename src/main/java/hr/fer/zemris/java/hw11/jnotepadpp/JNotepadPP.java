@@ -391,11 +391,11 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		}
 
 		if (currentModel.getFilePath() != null) {
+			System.out.println(currentModel.getFilePath().toString());
 			setTitle(currentModel.getFilePath().toString());
-			documentModel.getSelectedComponent().setName(currentModel.getFilePath().getFileName().toString());
 		} else {
+			System.out.println("Null");
 			setTitle("");
-			documentModel.getSelectedComponent().setName(provider.getString("new"));
 		}
 
 		calculateBar(currentModel.getTextComponent());
@@ -409,7 +409,8 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	@Override
 	public void documentAdded(SingleDocumentModel model) {
-		model.getTextComponent().addCaretListener(this);
+		if (model != null)
+			model.getTextComponent().addCaretListener(this);
 	}
 
 	/**
@@ -420,7 +421,8 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	@Override
 	public void documentRemoved(SingleDocumentModel model) {
-		model.getTextComponent().removeCaretListener(this);
+		if (model != null)
+			model.getTextComponent().removeCaretListener(this);
 	}
 
 	/**
