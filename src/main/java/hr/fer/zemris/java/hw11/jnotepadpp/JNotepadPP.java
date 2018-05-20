@@ -391,10 +391,8 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		}
 
 		if (currentModel.getFilePath() != null) {
-			System.out.println(currentModel.getFilePath().toString());
 			setTitle(currentModel.getFilePath().toString());
 		} else {
-			System.out.println("Null");
 			setTitle("");
 		}
 

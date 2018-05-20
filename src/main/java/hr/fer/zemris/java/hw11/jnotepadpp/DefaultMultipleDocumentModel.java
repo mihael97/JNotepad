@@ -296,8 +296,9 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public void documentModifyStatusUpdated(SingleDocumentModel model) {
 		for (SingleDocumentModel document : documents) {
 			if (document.equals(model)) {
+				System.out.println(model.getFilePath());
 				document = model;
-				document.setModified(!model.isModified());
+				document.setModified(true);
 				changeListener(document, model);
 			}
 		}
@@ -313,6 +314,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public void documentFilePathUpdated(SingleDocumentModel model) {
 		for (SingleDocumentModel document : documents) {
 			if (document.equals(model)) {
+				System.out.println(model.getFilePath());
 				changeListener(document, model);
 				callListeners(model, document, 1);
 				document.setFilePath(model.getFilePath());
