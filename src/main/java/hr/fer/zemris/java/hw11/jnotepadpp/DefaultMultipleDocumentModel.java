@@ -9,9 +9,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
 
 /**
@@ -20,7 +22,7 @@ import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
  * @author Mihael
  *
  */
-public class DefaultMultipleDocumentModel extends JTabbedPane implements MultipleDocumentModel {
+public class DefaultMultipleDocumentModel extends JTabbedPane implements MultipleDocumentModel, SingleDocumentListener {
 
 	/**
 	 * serialVersionUID
@@ -46,6 +48,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public DefaultMultipleDocumentModel() {
 		documents = new ArrayList<>();
 		listeners = new ArrayList<>();
+		addListeners();
 	}
 
 	/**
@@ -66,8 +69,12 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	@Override
 	public SingleDocumentModel createNewDocument() {
 		DefaultSingleDocumentModel model = new DefaultSingleDocumentModel(null, "");
+		model.addSingleDocumentListener(this);
 		documents.add(model);
+		callListeners(model, null, 2);
+		current = model;
 		this.add("new", model.getTextComponent());
+		this.setSelectedIndex(documents.size() - 1);
 		return model;
 	}
 
@@ -111,13 +118,14 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			}
 		}
 
+		model.addSingleDocumentListener(this);
 		documents.add(model);
 		current = model;
 
-		this.add(path.getFileName().toString(), current.getTextComponent());
+		this.add(path.getFileName().toString(), new JScrollPane(current.getTextComponent()));
 		this.setSelectedIndex(this.getTabCount() - 1);
 
-		callListeners(model, 2);
+		callListeners(model, null, 2);
 		return model;
 
 	}
@@ -135,15 +143,23 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	 */
 	@Override
 	public void saveDocument(SingleDocumentModel model, Path newPath) {
-		if (Files.exists(newPath)) {
-			throw new IllegalArgumentException("Document on path " + newPath + " already exists!");
-		}
+
+		// if (Files.exists(newPath)) {
+		// throw new IllegalArgumentException("Document on path " + newPath + " already
+		// exists!");
+		// }
 
 		try (BufferedWriter stream = new BufferedWriter(Files.newBufferedWriter(newPath))) {
 			stream.write(model.getTextComponent().getText());
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
+
+		System.out.println("Before: " + this.getSelectedComponent().getName());
+		this.getSelectedComponent().setName(model.getFilePath().getFileName().toString());
+		System.out.println("After: " + this.getSelectedComponent().getName());
+		callListeners(model, current, 1);
+		current = model;
 	}
 
 	/**
@@ -154,7 +170,13 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	 */
 	@Override
 	public void closeDocument(SingleDocumentModel model) {
+		if (documents.size() - 1 == 0) {
+			createNewDocument();
+		}
+		this.remove(documents.indexOf(model));
+
 		documents.remove(model);
+		current = documents.get(documents.size() - 1);
 	}
 
 	/**
@@ -213,23 +235,87 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	/**
 	 * Method informs every listener about last change
 	 * 
-	 * @param model
+	 * @param current
+	 *            - current document
+	 * @param previous
 	 *            - changed document
+	 * 
 	 * @param type
 	 *            - type of change
 	 */
-	private void callListeners(DefaultSingleDocumentModel model, int type) {
+	private void callListeners(SingleDocumentModel current, SingleDocumentModel previous, int type) {
 		for (MultipleDocumentListener listener : listeners) {
 			switch (type) {
+			case 1:
+				listener.currentDocumentChanged(previous, current);
 			case 2:
 
-				listener.documentAdded(model);
+				listener.documentAdded(current);
 				break;
 
 			default:
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Private method which adds listeners to tabbed pane
+	 */
+	private void addListeners() {
+		this.addChangeListener(e -> {
+			System.out.println("path before " + current.getFilePath());
+			System.out.println(documents.size());
+			if (documents.size() != 0)
+				callListeners(documents.get(this.getSelectedIndex()), current, 1);
+			current = documents.get(this.getSelectedIndex());
+			System.out.println("path after " + current.getFilePath());
+		});
+	}
+
+	/**
+	 * Method is called when modification status is changed
+	 * 
+	 * @param model
+	 *            - changed document
+	 */
+	@Override
+	public void documentModifyStatusUpdated(SingleDocumentModel model) {
+		for (SingleDocumentModel document : documents) {
+			if (document.equals(model)) {
+				changeListener(document, model);
+			}
+		}
+	}
+
+	/**
+	 * Method is called when document path is changed
+	 * 
+	 * @param model
+	 *            - changed document
+	 */
+	@Override
+	public void documentFilePathUpdated(SingleDocumentModel model) {
+		for (SingleDocumentModel document : documents) {
+			if (document.equals(model)) {
+				changeListener(document, model);
+				callListeners(model, document, 1);
+				document.setFilePath(model.getFilePath());
+			}
+		}
+	}
+
+	/**
+	 * Method switches listener from one {@link SingleDocumentModel} to other
+	 * 
+	 * @param previous
+	 *            - previous document
+	 * @param next
+	 *            - new document
+	 */
+	private void changeListener(SingleDocumentModel previous, SingleDocumentModel next) {
+		previous.removeSingleDocumentListener(this);
+		next.addSingleDocumentListener(this);
 	}
 
 }

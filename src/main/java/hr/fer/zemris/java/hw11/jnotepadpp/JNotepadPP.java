@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFrame;
@@ -15,11 +14,9 @@ import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
-import hr.fer.zemris.java.hw11.jnotepadpp.actions.ExitAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.SaveDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
-import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
 
 /**
@@ -41,7 +38,13 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 	/**
 	 * Reference to JTabedPane with all active documents
 	 */
-	private MultipleDocumentModel documentModel;
+	private DefaultMultipleDocumentModel documentModel;
+
+	/**
+	 * List of all active documents
+	 */
+	// private List<SingleDocumentModel> documents;
+	// private Set<SingleDocumentModel> documents;
 
 	// ACTION CONSTANTS
 
@@ -64,6 +67,16 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 	 * Private action that presents action for new blank document opening
 	 */
 	private Action openBlankAction;
+
+	/**
+	 * Private action for current document closing
+	 */
+	private Action closeDocument;
+
+	/**
+	 * Private action for statistic tracking
+	 */
+	private Action statistic;
 
 	/**
 	 * Public constructor
@@ -91,7 +104,9 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 	 */
 	private void initGUI() {
 		setLayout(new BorderLayout());
+		// documents = new LinkedHashSet<>();
 		documentModel = new DefaultMultipleDocumentModel();
+		documentModel.addMultipleDocumentListener(this);
 
 		add((Component) documentModel, BorderLayout.CENTER); // we need to cast to component because we are adding
 																// element in BorderLayout but
@@ -111,9 +126,20 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		try {
 			openDocumentAction = new OpenDocumentAction(this, documentModel);
 
-			saveDocumentAction = new SaveDocumentAction();
+			saveDocumentAction = new SaveDocumentAction(this, documentModel);
 
-			exitAction = new ExitAction();
+			exitAction = new AbstractAction() {
+
+				/**
+				 * serialVersionUID
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					System.exit(1);
+				}
+			};
 
 			openBlankAction = new AbstractAction() {
 
@@ -125,6 +151,50 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					documentModel.createNewDocument();
+				}
+			};
+			closeDocument = new AbstractAction() {
+
+				/**
+				 * serialVersionUID
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					System.out.println(documentModel.getCurrentDocument().getFilePath());
+					documentModel.closeDocument(documentModel.getCurrentDocument());
+				}
+			};
+
+			statistic = new AbstractAction() {
+
+				/**
+				 * serialVersionUID
+				 */
+				private static final long serialVersionUID = 1L;
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					if (documentModel.getCurrentDocument() != null) {
+						int numberOfNonBlanks = 0;
+
+						for (Character c : documentModel.getCurrentDocument().getTextComponent().getText()
+								.toCharArray()) {
+							if (!Character.isWhitespace(c)) {
+								numberOfNonBlanks++;
+							}
+						}
+
+						JOptionPane.showMessageDialog(JNotepadPP.this, "Your document has "
+								+ documentModel.getCurrentDocument().getTextComponent().getText().length()
+								+ " characters where " + numberOfNonBlanks + " are not whitespaces. Also text has "
+								+ documentModel.getCurrentDocument().getTextComponent().getRows() + " rows",
+								"Statistic", JOptionPane.INFORMATION_MESSAGE);
+					} else {
+						JOptionPane.showMessageDialog(JNotepadPP.this, "Current document doesn't exist", "Statistic",
+								JOptionPane.INFORMATION_MESSAGE);
+					}
 				}
 			};
 		} catch (Exception e) {
@@ -149,8 +219,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		file.add(new JMenuItem(saveDocumentAction));
 		JMenuItem saveAs = new JMenuItem("Save as");
 		file.add(saveAs);
-		JMenuItem close = new JMenuItem("Close");
-		file.add(close);
+		file.add(new JMenuItem(closeDocument));
 		file.add(new JMenuItem(exitAction));
 
 		// menu text
@@ -162,8 +231,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		text.add(copy);
 		JMenuItem paste = new JMenuItem("Paste");
 		text.add(paste);
-		JMenuItem statistic = new JMenuItem("Statistical info");
-		text.add(statistic);
+		text.add(new JMenuItem(statistic));
 
 		// menu language
 		JMenu language = new JMenu("Language");
@@ -225,23 +293,8 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		saveDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
 		saveDocumentAction.putValue(Action.SHORT_DESCRIPTION, "Used to save current file to disk.");
 
-		// deleteSelectedPartAction.putValue(Action.NAME, "Deleted selected text");
-		// deleteSelectedPartAction.putValue(Action.ACCELERATOR_KEY,
-		// KeyStroke.getKeyStroke("control F2"));
-		// deleteSelectedPartAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_D);
-		// deleteSelectedPartAction.putValue(Action.SHORT_DESCRIPTION, "Used to delete
-		// the selected part of text");
-		//
-		// toggleCaseAction.putValue(Action.NAME, "Toggle case");
-		// toggleCaseAction.putValue(Action.ACCELERATOR_KEY,
-		// KeyStroke.getKeyStroke("control F3"));
-		// toggleCaseAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
-		// toggleCaseAction.putValue(Action.SHORT_DESCRIPTION,
-		// "Used to toggle character case in selected part of text in entire
-		// document!");
-
 		exitAction.putValue(Action.NAME, "Exit");
-		exitAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+		exitAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control E"));
 		exitAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
 		exitAction.putValue(Action.SHORT_DESCRIPTION, "Exit");
 
@@ -249,11 +302,27 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		openBlankAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control N"));
 		openBlankAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_N);
 		openBlankAction.putValue(Action.SHORT_DESCRIPTION, "New blank document");
+
+		closeDocument.putValue(Action.NAME, "Close");
+		closeDocument.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control L"));
+		closeDocument.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
+		closeDocument.putValue(Action.SHORT_DESCRIPTION, "Current document closing");
+
+		statistic.putValue(Action.NAME, "Statistic");
+		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
+		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
+		statistic.putValue(Action.SHORT_DESCRIPTION, "Prints statistic for current file");
 	}
 
 	@Override
 	public void currentDocumentChanged(SingleDocumentModel previousModel, SingleDocumentModel currentModel) {
-		// TODO Auto-generated method stub
+		if (currentModel.getFilePath() != null) {
+			setTitle(currentModel.getFilePath().toString());
+			documentModel.getSelectedComponent().setName(currentModel.getFilePath().getFileName().toString());
+		} else {
+			setTitle("");
+			documentModel.getSelectedComponent().setName("new");
+		}
 
 	}
 
@@ -264,7 +333,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 
 	@Override
 	public void documentRemoved(SingleDocumentModel model) {
-		// TODO Auto-generated method stub
 
 	}
+
 }
