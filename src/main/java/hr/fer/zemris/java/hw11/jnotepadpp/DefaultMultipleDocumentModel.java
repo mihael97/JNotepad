@@ -264,12 +264,10 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	 */
 	private void addListeners() {
 		this.addChangeListener(e -> {
-			System.out.println("path before " + current.getFilePath());
-			System.out.println(documents.size());
+
 			if (documents.size() != 0)
 				callListeners(documents.get(this.getSelectedIndex()), current, 1);
 			current = documents.get(this.getSelectedIndex());
-			System.out.println("path after " + current.getFilePath());
 		});
 	}
 

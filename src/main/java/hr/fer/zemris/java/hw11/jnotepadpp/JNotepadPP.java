@@ -13,9 +13,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.CopyCutAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.ExitAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenBlankAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.SaveDocumentAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.StatisticAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
 
@@ -79,6 +82,16 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 	private Action statistic;
 
 	/**
+	 * Private action for text cutting
+	 */
+	private Action cutAction;
+
+	/**
+	 * Private action for text copying
+	 */
+	private Action copyAction;
+
+	/**
 	 * Public constructor
 	 */
 	public JNotepadPP() {
@@ -128,31 +141,9 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 
 			saveDocumentAction = new SaveDocumentAction(this, documentModel);
 
-			exitAction = new AbstractAction() {
+			exitAction = new ExitAction();
 
-				/**
-				 * serialVersionUID
-				 */
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					System.exit(1);
-				}
-			};
-
-			openBlankAction = new AbstractAction() {
-
-				/**
-				 * serialVersionUID
-				 */
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					documentModel.createNewDocument();
-				}
-			};
+			openBlankAction = new OpenBlankAction(documentModel);
 			closeDocument = new AbstractAction() {
 
 				/**
@@ -167,36 +158,11 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 				}
 			};
 
-			statistic = new AbstractAction() {
+			statistic = new StatisticAction(documentModel, this);
 
-				/**
-				 * serialVersionUID
-				 */
-				private static final long serialVersionUID = 1L;
+			cutAction = new CopyCutAction(documentModel, true);
+			copyAction = new CopyCutAction(documentModel, false);
 
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					if (documentModel.getCurrentDocument() != null) {
-						int numberOfNonBlanks = 0;
-
-						for (Character c : documentModel.getCurrentDocument().getTextComponent().getText()
-								.toCharArray()) {
-							if (!Character.isWhitespace(c)) {
-								numberOfNonBlanks++;
-							}
-						}
-
-						JOptionPane.showMessageDialog(JNotepadPP.this, "Your document has "
-								+ documentModel.getCurrentDocument().getTextComponent().getText().length()
-								+ " characters where " + numberOfNonBlanks + " are not whitespaces. Also text has "
-								+ documentModel.getCurrentDocument().getTextComponent().getRows() + " rows",
-								"Statistic", JOptionPane.INFORMATION_MESSAGE);
-					} else {
-						JOptionPane.showMessageDialog(JNotepadPP.this, "Current document doesn't exist", "Statistic",
-								JOptionPane.INFORMATION_MESSAGE);
-					}
-				}
-			};
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
@@ -226,9 +192,8 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		JMenu text = new JMenu("Text");
 		menuBar.add(text);
 
-		text.add(new JMenuItem("Cut"));
-		JMenuItem copy = new JMenuItem("Copy");
-		text.add(copy);
+		text.add(new JMenuItem(cutAction));
+		text.add(new JMenuItem(copyAction));
 		JMenuItem paste = new JMenuItem("Paste");
 		text.add(paste);
 		text.add(new JMenuItem(statistic));
@@ -312,6 +277,16 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
 		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
 		statistic.putValue(Action.SHORT_DESCRIPTION, "Prints statistic for current file");
+
+		cutAction.putValue(Action.NAME, "Cut");
+		cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
+		cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
+		cutAction.putValue(Action.SHORT_DESCRIPTION, "Deletes selected text from file");
+
+		copyAction.putValue(Action.NAME, "Copy");
+		copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
+		copyAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
+		copyAction.putValue(Action.SHORT_DESCRIPTION, "Copies selected text from file");
 	}
 
 	@Override
@@ -328,11 +303,13 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener {
 
 	@Override
 	public void documentAdded(SingleDocumentModel model) {
+		// TODO Auto-generated method stub
 
 	}
 
 	@Override
 	public void documentRemoved(SingleDocumentModel model) {
+		// TODO Auto-generated method stub
 
 	}
 
