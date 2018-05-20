@@ -14,6 +14,7 @@ import hr.fer.zemris.java.hw11.jnotepadpp.DefaultMultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.DefaultSingleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.JNotepadPP;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 public class SaveDocumentAction extends AbstractAction {
 
@@ -21,10 +22,10 @@ public class SaveDocumentAction extends AbstractAction {
 	private DefaultMultipleDocumentModel documentModel;
 	private boolean flag;
 
-	public SaveDocumentAction(JFrame frame, DefaultMultipleDocumentModel documentModel,boolean flag) {
+	public SaveDocumentAction(JFrame frame, DefaultMultipleDocumentModel documentModel, boolean flag) {
 		this.frame = Objects.requireNonNull(frame);
 		this.documentModel = Objects.requireNonNull(documentModel);
-		this.flag=flag;
+		this.flag = flag;
 	}
 
 	@Override
@@ -32,12 +33,13 @@ public class SaveDocumentAction extends AbstractAction {
 
 		SingleDocumentModel document = documentModel.getCurrentDocument();
 
-		if (document.getFilePath() == null || flag==true) {
+		if (document.getFilePath() == null || flag == true) {
 			JFileChooser jfc = new JFileChooser();
 
 			jfc.setDialogTitle("Save document");
 			if (jfc.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION) {
-				JOptionPane.showMessageDialog(frame, "No stored data", "Error", JOptionPane.WARNING_MESSAGE);
+				JOptionPane.showMessageDialog(frame, LocalizationProvider.getInstance().getString("exit4"),
+						LocalizationProvider.getInstance().getString("error"), JOptionPane.WARNING_MESSAGE);
 				return;
 			}
 			document.setFilePath(jfc.getSelectedFile().toPath());
@@ -45,7 +47,8 @@ public class SaveDocumentAction extends AbstractAction {
 		}
 
 		documentModel.saveDocument(document, document.getFilePath());
-		JOptionPane.showMessageDialog(frame, "File is stored!", "Information", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(frame, LocalizationProvider.getInstance().getString("fileStored"),
+				LocalizationProvider.getInstance().getString("Information"), JOptionPane.INFORMATION_MESSAGE);
 
 	}
 

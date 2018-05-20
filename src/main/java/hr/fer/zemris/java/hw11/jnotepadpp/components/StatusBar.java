@@ -1,8 +1,10 @@
-package hr.fer.zemris.java.hw11.jnotepadpp;
+package hr.fer.zemris.java.hw11.jnotepadpp.components;
 
 import javax.swing.JLabel;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
+
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 public class StatusBar extends JToolBar {
 	private JLabel length;
@@ -12,7 +14,7 @@ public class StatusBar extends JToolBar {
 	private int array[];
 
 	public StatusBar() {
-		length = new JLabel("Length: 0");
+		length = new JLabel(LocalizationProvider.getInstance().getString("length") + ": 0");
 		ln = new JLabel("Ln: 0");
 		col = new JLabel("col: 0");
 		sel = new JLabel("Sel: 0");
@@ -39,7 +41,7 @@ public class StatusBar extends JToolBar {
 	}
 
 	public void setLength(int i) {
-		this.length.setText("Length : " + String.valueOf(i));
+		this.length.setText(LocalizationProvider.getInstance().getString("length") + ":" + String.valueOf(i));
 		array[0] = i;
 	}
 
@@ -69,11 +71,4 @@ public class StatusBar extends JToolBar {
 		this.sel.setText("Sel : " + String.valueOf(sel));
 		array[3] = sel;
 	}
-
-	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			new StatusBar().setVisible(true);
-		});
-	}
-
 }

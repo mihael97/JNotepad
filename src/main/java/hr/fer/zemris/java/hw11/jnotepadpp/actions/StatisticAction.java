@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 
 import hr.fer.zemris.java.hw11.jnotepadpp.JNotepadPP;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 public class StatisticAction extends AbstractAction {
 
@@ -32,13 +33,16 @@ public class StatisticAction extends AbstractAction {
 			}
 
 			JOptionPane.showMessageDialog(frame,
-					"Your document has " + documentModel.getCurrentDocument().getTextComponent().getText().length()
-							+ " characters where " + numberOfNonBlanks + " are not whitespaces. Also text has "
-							+ documentModel.getCurrentDocument().getTextComponent().getLineCount() + " rows",
-					"Statistic", JOptionPane.INFORMATION_MESSAGE);
+					LocalizationProvider.getInstance().getString("statistic1")
+							+ documentModel.getCurrentDocument().getTextComponent().getText().length()
+							+ LocalizationProvider.getInstance().getString("statistic2") + numberOfNonBlanks
+							+ LocalizationProvider.getInstance().getString("statistic3")
+							+ documentModel.getCurrentDocument().getTextComponent().getLineCount()
+							+ LocalizationProvider.getInstance().getString("statistic3"),
+					LocalizationProvider.getInstance().getString("statistic4"), JOptionPane.INFORMATION_MESSAGE);
 		} else {
-			JOptionPane.showMessageDialog(frame, "Current document doesn't exist", "Statistic",
-					JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(frame, LocalizationProvider.getInstance().getString("statistic5"),
+					LocalizationProvider.getInstance().getString("statistic"), JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 

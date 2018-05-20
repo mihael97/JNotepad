@@ -28,8 +28,12 @@ import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.PasteAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.SaveDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.StatisticAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.components.LocalizedJMenu;
+import hr.fer.zemris.java.hw11.jnotepadpp.components.LocalizedJMenuItem;
+import hr.fer.zemris.java.hw11.jnotepadpp.components.StatusBar;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 /**
  * Public class implements text editor with many features like: <br>
@@ -207,32 +211,44 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		add(menuBar, BorderLayout.PAGE_START);
 
 		// menu file
-		JMenu file = new JMenu("File");
+		LocalizedJMenu file = new LocalizedJMenu("file", LocalizationProvider.getInstance());
 		menuBar.add(file);
-		// JMenuItem openNew = new JMenuItem("New");
-		file.add(new JMenuItem(openBlankAction));
-		file.add(new JMenuItem(openDocumentAction));
-		file.add(new JMenuItem(saveDocumentAction));
-		file.add(new JMenuItem(saveAsChangeAction));
-		file.add(new JMenuItem(closeDocument));
-		file.add(new JMenuItem(exitAction));
+		// JMenuItem
+		file.add(new LocalizedJMenuItem(openBlankAction, LocalizationProvider.getInstance()));
+		file.add(new LocalizedJMenuItem(openDocumentAction, LocalizationProvider.getInstance()));
+		file.add(new LocalizedJMenuItem(saveDocumentAction, LocalizationProvider.getInstance()));
+		file.add(new LocalizedJMenuItem(saveAsChangeAction, LocalizationProvider.getInstance()));
+		file.add(new LocalizedJMenuItem(closeDocument, LocalizationProvider.getInstance()));
+		file.add(new LocalizedJMenuItem(exitAction, LocalizationProvider.getInstance()));
 
 		// menu text
-		JMenu text = new JMenu("Text");
+		LocalizedJMenu text = new LocalizedJMenu("text", LocalizationProvider.getInstance());
 		menuBar.add(text);
 
-		text.add(new JMenuItem(cutAction));
-		text.add(new JMenuItem(copyAction));
-		text.add(new JMenuItem(pasteAction));
-		text.add(new JMenuItem(statistic));
+		text.add(new LocalizedJMenuItem(cutAction, LocalizationProvider.getInstance()));
+		text.add(new LocalizedJMenuItem(copyAction, LocalizationProvider.getInstance()));
+		text.add(new LocalizedJMenuItem(pasteAction, LocalizationProvider.getInstance()));
+		text.add(new LocalizedJMenuItem(statistic, LocalizationProvider.getInstance()));
 
 		// menu language
-		JMenu language = new JMenu("Language");
+		LocalizedJMenu language = new LocalizedJMenu("language", LocalizationProvider.getInstance());
 		menuBar.add(language);
 
-		language.add("en");
-		language.add("hr");
-		language.add("de");
+		JMenuItem en = new JMenuItem("en");
+		en.addActionListener(e -> {
+			LocalizationProvider.getInstance().setLanguage("en");
+		});
+		language.add(en);
+		JMenuItem hr = new JMenuItem("hr");
+		hr.addActionListener(e -> {
+			LocalizationProvider.getInstance().setLanguage("hr");
+		});
+		language.add(hr);
+		JMenuItem de = new JMenuItem("de");
+		de.addActionListener(e -> {
+			LocalizationProvider.getInstance().setLanguage("de");
+		});
+		language.add(de);
 
 		toolsMenu(menuBar);
 
@@ -246,81 +262,87 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	private void toolsMenu(JMenuBar menuBar) {
 		// menu tools
-		JMenu tool = new JMenu("Tools");
+		LocalizedJMenu tool = new LocalizedJMenu("tools", LocalizationProvider.getInstance());
+
 		menuBar.add(tool);
 
 		// case submenu
-		JMenu caseMenu = new JMenu("Change case");
+		LocalizedJMenu caseMenu = new LocalizedJMenu("case", LocalizationProvider.getInstance());
 		tool.add(caseMenu);
 
-		caseMenu.add(new JMenuItem(upperCaseChange));
-		caseMenu.add(new JMenuItem(lowerCaseChange));
-		caseMenu.add(new JMenuItem(invertCaseChange));
+		caseMenu.add(new LocalizedJMenuItem(upperCaseChange, LocalizationProvider.getInstance()));
+		caseMenu.add(new LocalizedJMenuItem(lowerCaseChange, LocalizationProvider.getInstance()));
+		caseMenu.add(new LocalizedJMenuItem(invertCaseChange, LocalizationProvider.getInstance()));
 
 		// Sort submenu
-		JMenu sort = new JMenu("Sort");
+		LocalizedJMenu sort = new LocalizedJMenu("sort", LocalizationProvider.getInstance());
 		tool.add(sort);
 
-		JMenuItem ascending = new JMenuItem("Ascending");
-		JMenuItem descending = new JMenuItem("Descending");
-
-		sort.add(ascending);
-		sort.add(descending);
+		// LocalizedJMenuItem ascending = new LocalizedJMenuItem("ascending",
+		// LocalizationProvider.getInstance());
+		// LocalizedJMenuItem descending = new LocalizedJMenuItem("descending",
+		// LocalizationProvider.getInstance());
+		//
+		// sort.add(ascending);
+		// sort.add(descending);
 	}
 
 	/**
 	 * Method initializes every actions and sets right properties to them
 	 */
 	private void createActions() {
-		openDocumentAction.putValue(Action.NAME, "Open");
+		openDocumentAction.putValue(Action.NAME, "open");
 		openDocumentAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control O"));
 		openDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_0);
-		openDocumentAction.putValue(Action.SHORT_DESCRIPTION, "Used to open existing file from disk.");
+		openDocumentAction.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("open_desc"));
 
-		saveDocumentAction.putValue(Action.NAME, "Save");
+		saveDocumentAction.putValue(Action.NAME, "save");
 		saveDocumentAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
 		saveDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
-		saveDocumentAction.putValue(Action.SHORT_DESCRIPTION, "Used to save current file to disk.");
+		saveDocumentAction.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("save_desc"));
 
-		saveAsChangeAction.putValue(Action.NAME, "Save As");
+		saveAsChangeAction.putValue(Action.NAME, "saveAs");
 		saveAsChangeAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control F12"));
 		saveAsChangeAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_F12);
-		saveAsChangeAction.putValue(Action.SHORT_DESCRIPTION, "Used to save current file to different location.");
+		saveAsChangeAction.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("saveAs_desc"));
 
-		exitAction.putValue(Action.NAME, "Exit");
+		exitAction.putValue(Action.NAME, "exit");
 		exitAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control E"));
 		exitAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
-		exitAction.putValue(Action.SHORT_DESCRIPTION, "Exit");
+		exitAction.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("exit_desc"));
 
-		openBlankAction.putValue(Action.NAME, "New");
+		openBlankAction.putValue(Action.NAME, "new");
 		openBlankAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control N"));
 		openBlankAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_N);
-		openBlankAction.putValue(Action.SHORT_DESCRIPTION, "New blank document");
+		openBlankAction.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("new_desc"));
 
-		closeDocument.putValue(Action.NAME, "Close");
-		closeDocument.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control L"));
+		closeDocument.putValue(Action.NAME, "close");
+		closeDocument.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift C"));
 		closeDocument.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
-		closeDocument.putValue(Action.SHORT_DESCRIPTION, "Current document closing");
+		closeDocument.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("close_desc"));
 
-		statistic.putValue(Action.NAME, "Statistic");
+		statistic.putValue(Action.NAME, "statistic");
 		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
 		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
-		statistic.putValue(Action.SHORT_DESCRIPTION, "Prints statistic for current file");
+		statistic.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("statistic_desc"));
 
-		cutAction.putValue(Action.NAME, "Cut");
+		cutAction.putValue(Action.NAME, "cut");
 		cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
 		cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
-		cutAction.putValue(Action.SHORT_DESCRIPTION, "Deletes selected text from file");
+		cutAction.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("cut_desc"));
 
-		copyAction.putValue(Action.NAME, "Copy");
+		copyAction.putValue(Action.NAME, "copy");
 		copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
 		copyAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
-		copyAction.putValue(Action.SHORT_DESCRIPTION, "Copies selected text from file");
+		copyAction.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("copy_desc"));
 
-		pasteAction.putValue(Action.NAME, "Paste");
+		pasteAction.putValue(Action.NAME, "paste");
 		pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
 		pasteAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_V);
-		pasteAction.putValue(Action.SHORT_DESCRIPTION, "Pastes string from text");
+		pasteAction.putValue(Action.SHORT_DESCRIPTION, LocalizationProvider.getInstance().getString("paste_desc"));
 
 		caseActions();
 
@@ -330,20 +352,23 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 * Method sets actions for every case(uppercase,lowercase,invert) action
 	 */
 	private void caseActions() {
-		invertCaseChange.putValue(Action.NAME, "Invert");
+		invertCaseChange.putValue(Action.NAME, "invert");
 		invertCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control I"));
 		invertCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_I);
-		invertCaseChange.putValue(Action.SHORT_DESCRIPTION, "Inverts every case");
+		invertCaseChange.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("invert_desc"));
 
-		upperCaseChange.putValue(Action.NAME, "Uppercase");
+		upperCaseChange.putValue(Action.NAME, "uppercase");
 		upperCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control U"));
 		upperCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_U);
-		upperCaseChange.putValue(Action.SHORT_DESCRIPTION, "Sets every character to uppercase");
+		upperCaseChange.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("uppercase_desc"));
 
-		lowerCaseChange.putValue(Action.NAME, "Lowercase");
+		lowerCaseChange.putValue(Action.NAME, "lowercase");
 		lowerCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control L O"));
 		lowerCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_L | KeyEvent.VK_O);
-		lowerCaseChange.putValue(Action.SHORT_DESCRIPTION, "Sets every character to lowercase");
+		lowerCaseChange.putValue(Action.SHORT_DESCRIPTION,
+				LocalizationProvider.getInstance().getString("lowercase_desc"));
 	}
 
 	/**
@@ -357,12 +382,11 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	@Override
 	public void currentDocumentChanged(SingleDocumentModel previousModel, SingleDocumentModel currentModel) {
 
-		System.out.println("Current documment!");
 		documentRemoved(previousModel);
 		documentAdded(currentModel);
 
 		if (previousModel == null && currentModel == null) {
-			throw new IllegalArgumentException("Both arguments are null!");
+			throw new IllegalArgumentException(LocalizationProvider.getInstance().getString("nullarguments"));
 		}
 
 		if (currentModel.getFilePath() != null) {
@@ -370,7 +394,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 			documentModel.getSelectedComponent().setName(currentModel.getFilePath().getFileName().toString());
 		} else {
 			setTitle("");
-			documentModel.getSelectedComponent().setName("new");
+			documentModel.getSelectedComponent().setName(LocalizationProvider.getInstance().getString("new"));
 		}
 
 		calculateBar(currentModel.getTextComponent());
@@ -384,7 +408,6 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	@Override
 	public void documentAdded(SingleDocumentModel model) {
-		System.out.println("New file");
 		model.getTextComponent().addCaretListener(this);
 	}
 
@@ -396,7 +419,6 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	@Override
 	public void documentRemoved(SingleDocumentModel model) {
-		System.out.println("Unregister!");
 		model.getTextComponent().removeCaretListener(this);
 	}
 
@@ -408,7 +430,6 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	@Override
 	public void caretUpdate(CaretEvent event) {
-		System.out.println("TU!");
 		calculateBar((JTextArea) event.getSource());
 	}
 
@@ -437,7 +458,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 			}
 
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, "Error during status bar calculting");
+			JOptionPane.showMessageDialog(this, LocalizationProvider.getInstance().getString("calculateerror"));
 		}
 	}
 

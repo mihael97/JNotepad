@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import hr.fer.zemris.java.hw11.jnotepadpp.DefaultMultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.DefaultSingleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 public class ExitAction extends AbstractAction {
 
@@ -31,7 +32,8 @@ public class ExitAction extends AbstractAction {
 
 			if (doc.isModified()) {
 				int response = JOptionPane.showConfirmDialog(frame,
-						"File \'" + doc.getFilePath() + "\' is modified but not saved. Do you want to save it?",
+						LocalizationProvider.getInstance().getString("exit1") + doc.getFilePath()
+								+ LocalizationProvider.getInstance().getString("exit2"),
 						"Modified file", JOptionPane.YES_NO_CANCEL_OPTION);
 				if (response == JOptionPane.YES_OPTION) {
 
@@ -40,10 +42,10 @@ public class ExitAction extends AbstractAction {
 					if (doc.getFilePath() == null) {
 						JFileChooser jfc = new JFileChooser();
 
-						jfc.setDialogTitle("Save document");
+						jfc.setDialogTitle(LocalizationProvider.getInstance().getString("exit3"));
 						if (jfc.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION) {
-							JOptionPane.showMessageDialog(frame, "No stored data", "Error",
-									JOptionPane.WARNING_MESSAGE);
+							JOptionPane.showMessageDialog(frame, LocalizationProvider.getInstance().getString("exit4"),
+									LocalizationProvider.getInstance().getString("error"), JOptionPane.WARNING_MESSAGE);
 							return;
 						}
 

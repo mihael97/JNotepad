@@ -11,6 +11,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import hr.fer.zemris.java.hw11.jnotepadpp.JNotepadPP;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 /**
  * Public class represents action for document opening
@@ -67,8 +68,10 @@ public class OpenDocumentAction extends AbstractAction {
 		Path filePath = fileName.toPath();
 
 		if (!Files.isReadable(filePath)) {
-			JOptionPane.showMessageDialog(frame, "File " + fileName.getAbsolutePath() + "doesn't exist", "Pogreska",
-					JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(frame,
+					LocalizationProvider.getInstance().getString("exit1") + fileName.getAbsolutePath()
+							+ LocalizationProvider.getInstance().getString("open1"),
+					LocalizationProvider.getInstance().getString("error"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 

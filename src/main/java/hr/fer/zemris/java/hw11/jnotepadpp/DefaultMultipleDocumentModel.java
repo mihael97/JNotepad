@@ -15,6 +15,7 @@ import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 /**
  * Method presents set of {@link SingleDocumentModel}
@@ -104,7 +105,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			context = Files.readAllBytes(path);
 		} catch (Exception e) {
 
-			throw new IllegalArgumentException("Error during reading of file " + path.toAbsolutePath());
+			throw new IllegalArgumentException(
+					LocalizationProvider.getInstance().getString("errorReading") + path.toAbsolutePath());
 		}
 
 		String text = new String(context, StandardCharsets.UTF_8);
@@ -147,7 +149,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public void saveDocument(SingleDocumentModel model, Path newPath) {
 
 		if (model.getFilePath() != null && model.getFilePath() != newPath) {
-			throw new IllegalArgumentException("File is already opened with different path!");
+			throw new IllegalArgumentException(LocalizationProvider.getInstance().getString("alreadyOpened"));
 		}
 
 		try (BufferedWriter stream = new BufferedWriter(Files.newBufferedWriter(newPath))) {
@@ -170,6 +172,10 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	 */
 	@Override
 	public void closeDocument(SingleDocumentModel model) {
+		if (documents.size() == 0) {
+			return;
+		}
+
 		if (documents.size() - 1 == 0) {
 			createNewDocument();
 		}
@@ -228,7 +234,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public SingleDocumentModel getDocument(int index) {
 
 		if (documents.size() - 1 < index) {
-			throw new IllegalArgumentException("Argument is " + index + " but size is " + documents.size());
+			throw new IllegalArgumentException(LocalizationProvider.getInstance().getString("document1") + index
+					+ LocalizationProvider.getInstance().getString("document2") + documents.size());
 		}
 
 		return documents.get(index);
