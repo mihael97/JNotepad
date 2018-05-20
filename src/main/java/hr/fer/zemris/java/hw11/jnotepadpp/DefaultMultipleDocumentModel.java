@@ -70,6 +70,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public SingleDocumentModel createNewDocument() {
 		DefaultSingleDocumentModel model = new DefaultSingleDocumentModel(null, "");
 		model.addSingleDocumentListener(this);
+		model.setModified(true);
 		documents.add(model);
 		callListeners(model, null, 2);
 		current = model;
@@ -119,6 +120,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		}
 
 		model.addSingleDocumentListener(this);
+		model.setModified(false);
 		documents.add(model);
 		current = model;
 
@@ -144,10 +146,9 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	@Override
 	public void saveDocument(SingleDocumentModel model, Path newPath) {
 
-		// if (Files.exists(newPath)) {
-		// throw new IllegalArgumentException("Document on path " + newPath + " already
-		// exists!");
-		// }
+		if (model.getFilePath() != null && model.getFilePath() != newPath) {
+			throw new IllegalArgumentException("File is already opened with different path!");
+		}
 
 		try (BufferedWriter stream = new BufferedWriter(Files.newBufferedWriter(newPath))) {
 			stream.write(model.getTextComponent().getText());
@@ -155,9 +156,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			throw new IllegalArgumentException(e.getMessage());
 		}
 
-		System.out.println("Before: " + this.getSelectedComponent().getName());
+		model.setModified(false);
 		this.getSelectedComponent().setName(model.getFilePath().getFileName().toString());
-		System.out.println("After: " + this.getSelectedComponent().getName());
 		callListeners(model, current, 1);
 		current = model;
 	}
@@ -177,6 +177,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 		documents.remove(model);
 		current = documents.get(documents.size() - 1);
+		callListeners(null, model, 3);
+		callListeners(current, null, 2);
 	}
 
 	/**
@@ -252,7 +254,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 				listener.documentAdded(current);
 				break;
-
+			case 3:
+				listener.documentRemoved(previous);
 			default:
 				break;
 			}
@@ -281,6 +284,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	public void documentModifyStatusUpdated(SingleDocumentModel model) {
 		for (SingleDocumentModel document : documents) {
 			if (document.equals(model)) {
+				document = model;
+				document.setModified(!model.isModified());
 				changeListener(document, model);
 			}
 		}

@@ -45,7 +45,7 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	 *             - if content is null
 	 */
 	public DefaultSingleDocumentModel(Path path, String content) {
-		listeners=new ArrayList<>();
+		listeners = new ArrayList<>();
 		this.path = path;
 		component = new JTextArea(Objects.requireNonNull(content));
 	}
@@ -115,7 +115,6 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	@Override
 	public void addSingleDocumentListener(SingleDocumentListener l) {
 		Objects.requireNonNull(l);
-		System.out.println(l==null);
 		if (!listeners.contains(l)) {
 			listeners.add(l);
 		}
@@ -155,8 +154,8 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	}
 
 	/**
-	 * Method checks if two {@link DefaultSingleDocumentModel} are same. Two instaces
-	 * are same if they have same <code>path</code> or <code>path</code> is
+	 * Method checks if two {@link DefaultSingleDocumentModel} are same. Two
+	 * instaces are same if they have same <code>path</code> or <code>path</code> is
 	 * <code>null</code>
 	 * 
 	 * @param obj
