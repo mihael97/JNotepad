@@ -2,16 +2,20 @@ package hr.fer.zemris.java.hw11.jnotepadpp;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextArea;
+import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.CaretEvent;
@@ -26,7 +30,10 @@ import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenBlankAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.OpenDocumentAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.PasteAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.SaveDocumentAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.SortAction;
 import hr.fer.zemris.java.hw11.jnotepadpp.actions.StatisticAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.actions.UniqueAction;
+import hr.fer.zemris.java.hw11.jnotepadpp.components.LocalizedJButton;
 import hr.fer.zemris.java.hw11.jnotepadpp.components.LocalizedJMenu;
 import hr.fer.zemris.java.hw11.jnotepadpp.components.LocalizedJMenuItem;
 import hr.fer.zemris.java.hw11.jnotepadpp.components.StatusBar;
@@ -129,6 +136,26 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	private Action saveAsChangeAction;
 
 	/**
+	 * Private action for removing same lines
+	 */
+	private Action uniqueAction;
+
+	/**
+	 * Private action for ascending sort of lines
+	 */
+	private Action ascendingAction;
+
+	/**
+	 * Private action for descending sort of lines
+	 */
+	private Action descendignAction;
+
+	/**
+	 * Localized {@link JMenu} with functions for line sorting
+	 */
+	private LocalizedJMenu sort;
+
+	/**
 	 * Bridge between user and {@link LocalizationProvider}
 	 */
 	private LocalizationProviderBridge provider;
@@ -181,7 +208,12 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		statusBar = new StatusBar();
 		add(statusBar, BorderLayout.PAGE_END);
 		initializeConstants();
-		createActions();
+
+		documentActions();
+		textAction();
+		caseActions();
+		sortActions();
+
 		createMenuBar();
 	}
 
@@ -204,6 +236,9 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 			lowerCaseChange = new CaseChangeAction(documentModel, CaseEnum.LOWER);
 			invertCaseChange = new CaseChangeAction(documentModel, CaseEnum.INVERT);
 			saveAsChangeAction = new SaveDocumentAction(this, documentModel, true, provider);
+			uniqueAction = new UniqueAction(documentModel);
+			ascendingAction = new SortAction(documentModel, true);
+			descendignAction = new SortAction(documentModel, false);
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
@@ -215,27 +250,36 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	private void createMenuBar() {
 		// new menu bar
 		JMenuBar menuBar = new JMenuBar();
-		add(menuBar, BorderLayout.PAGE_START);
+		JToolBar toolBar = new JToolBar();
+
+		JPanel panel = new JPanel(new GridLayout(2, 0));
+		panel.add(menuBar);
+		panel.add(toolBar);
+		add(panel, BorderLayout.PAGE_START);
 
 		// menu file
 		LocalizedJMenu file = new LocalizedJMenu("file", provider);
 		menuBar.add(file);
-		// JMenuItem
-		file.add(new LocalizedJMenuItem(openBlankAction, provider));
-		file.add(new LocalizedJMenuItem(openDocumentAction, provider));
-		file.add(new LocalizedJMenuItem(saveDocumentAction, provider));
-		file.add(new LocalizedJMenuItem(saveAsChangeAction, provider));
-		file.add(new LocalizedJMenuItem(closeDocument, provider));
-		file.add(new LocalizedJMenuItem(exitAction, provider));
+
+		addItem(openBlankAction, file, toolBar);
+		addItem(saveDocumentAction, file, toolBar);
+		addItem(saveAsChangeAction, file, toolBar);
+		addItem(closeDocument, file, toolBar);
+		addItem(exitAction, file, toolBar);
+
+		toolBar.addSeparator();
 
 		// menu text
 		LocalizedJMenu text = new LocalizedJMenu("text", provider);
 		menuBar.add(text);
 
-		text.add(new LocalizedJMenuItem(cutAction, provider));
-		text.add(new LocalizedJMenuItem(copyAction, provider));
-		text.add(new LocalizedJMenuItem(pasteAction, provider));
+		addItem(cutAction, text, toolBar);
+		addItem(copyAction, text, toolBar);
+		addItem(pasteAction, text, toolBar);
+		addItem(statistic, text, toolBar);
 		text.add(new LocalizedJMenuItem(statistic, provider));
+
+		toolBar.addSeparator();
 
 		// menu language
 		LocalizedJMenu language = new LocalizedJMenu("language", provider);
@@ -257,7 +301,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		});
 		language.add(de);
 
-		toolsMenu(menuBar);
+		toolsMenu(menuBar, toolBar);
 
 	}
 
@@ -266,8 +310,10 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 * 
 	 * @param menuBar
 	 *            - menu bar
+	 * @param toolBar
+	 *            - tool bar
 	 */
-	private void toolsMenu(JMenuBar menuBar) {
+	private void toolsMenu(JMenuBar menuBar, JToolBar toolBar) {
 		// menu tools
 		LocalizedJMenu tool = new LocalizedJMenu("tools", provider);
 
@@ -277,27 +323,41 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		LocalizedJMenu caseMenu = new LocalizedJMenu("case", provider);
 		tool.add(caseMenu);
 
-		caseMenu.add(new LocalizedJMenuItem(upperCaseChange, provider));
-		caseMenu.add(new LocalizedJMenuItem(lowerCaseChange, provider));
-		caseMenu.add(new LocalizedJMenuItem(invertCaseChange, provider));
+		addItem(upperCaseChange, caseMenu, toolBar);
+		addItem(lowerCaseChange, caseMenu, toolBar);
+		addItem(invertCaseChange, caseMenu, toolBar);
 
 		// Sort submenu
-		LocalizedJMenu sort = new LocalizedJMenu("sort", provider);
+		sort = new LocalizedJMenu("sort", provider);
+		sort.setOpaque(true);
 		tool.add(sort);
 
-		// LocalizedJMenuItem ascending = new LocalizedJMenuItem("ascending",
-		// provider);
-		// LocalizedJMenuItem descending = new LocalizedJMenuItem("descending",
-		// provider);
-		//
-		// sort.add(ascending);
-		// sort.add(descending);
+		toolBar.addSeparator();
+
+		addItem(ascendingAction, sort, toolBar);
+		addItem(descendignAction, sort, toolBar);
+		addItem(uniqueAction, sort, toolBar);
 	}
 
 	/**
-	 * Method initializes every actions and sets right properties to them
+	 * Method adds element into menu and tool bar
+	 * 
+	 * @param action
+	 *            - action
+	 * @param menu
+	 *            - menu
+	 * @param toolBar
+	 *            - tool bar
 	 */
-	private void createActions() {
+	private void addItem(Action action, LocalizedJMenu menu, JToolBar toolBar) {
+		menu.add(new LocalizedJMenuItem(action, provider));
+		toolBar.add(new LocalizedJButton(action, provider));
+	}
+
+	/**
+	 * Method initializes actions for opening,saving,closing and program terminating
+	 */
+	private void documentActions() {
 		openDocumentAction.putValue(Action.NAME, "open");
 		openDocumentAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control O"));
 		openDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_0);
@@ -327,12 +387,12 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		closeDocument.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift C"));
 		closeDocument.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
 		closeDocument.putValue(Action.SHORT_DESCRIPTION, provider.getString("close_desc"));
+	}
 
-		statistic.putValue(Action.NAME, "statistic");
-		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
-		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
-		statistic.putValue(Action.SHORT_DESCRIPTION, provider.getString("statistic_desc"));
-
+	/**
+	 * Method initializes actions for text editing
+	 */
+	private void textAction() {
 		cutAction.putValue(Action.NAME, "cut");
 		cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
 		cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
@@ -348,8 +408,30 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		pasteAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_V);
 		pasteAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("paste_desc"));
 
-		caseActions();
+		statistic.putValue(Action.NAME, "statistic");
+		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
+		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
+		statistic.putValue(Action.SHORT_DESCRIPTION, provider.getString("statistic_desc"));
+	}
 
+	/**
+	 * Method initializes actions for line sorting
+	 */
+	private void sortActions() {
+		uniqueAction.putValue(Action.NAME, "unique");
+		uniqueAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift U"));
+		uniqueAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_U);
+		uniqueAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("unique_desc"));
+
+		ascendingAction.putValue(Action.NAME, "ascending");
+		ascendingAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift A"));
+		ascendingAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_A);
+		ascendingAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("ascending_desc"));
+
+		descendignAction.putValue(Action.NAME, "descending");
+		descendignAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift D"));
+		descendignAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_D);
+		descendignAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("descending_desc"));
 	}
 
 	/**
@@ -368,7 +450,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 
 		lowerCaseChange.putValue(Action.NAME, "lowercase");
 		lowerCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control M"));
-		lowerCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_L | KeyEvent.VK_O);
+		lowerCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_M);
 		lowerCaseChange.putValue(Action.SHORT_DESCRIPTION, provider.getString("lowercase_desc"));
 	}
 
@@ -448,14 +530,10 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 			statusBar.setCol(source.getCaretPosition() - source.getLineStartOffset(line) + 1);
 			statusBar.setSel(Math.abs(source.getCaret().getDot() - source.getCaret().getMark()));
 
-			if (statusBar.getSel() == 0) {
-				invertCaseChange.setEnabled(false);
-				upperCaseChange.setEnabled(false);
-				lowerCaseChange.setEnabled(false);
+			if (statusBar.getSel() == 0 || statusBar.getLength() == 0) {
+				sort.setEnabled(false);
 			} else {
-				invertCaseChange.setEnabled(true);
-				upperCaseChange.setEnabled(true);
-				lowerCaseChange.setEnabled(true);
+				sort.setEnabled(true);
 			}
 
 		} catch (Exception e) {

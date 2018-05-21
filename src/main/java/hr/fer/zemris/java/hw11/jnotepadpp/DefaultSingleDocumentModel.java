@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.swing.JTextArea;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
@@ -47,7 +49,42 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	public DefaultSingleDocumentModel(Path path, String content) {
 		listeners = new ArrayList<>();
 		this.path = path;
+
 		component = new JTextArea(Objects.requireNonNull(content));
+		component.getDocument().addDocumentListener(new DocumentListener() {
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+
+				textAreaUpdated();
+
+			}
+
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+
+				textAreaUpdated();
+
+			}
+
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+
+				textAreaUpdated();
+
+			}
+
+			private void textAreaUpdated() {
+				if (modified == false) {
+					modified = true;
+				}
+
+				for (SingleDocumentListener listener : listeners) {
+					listener.documentModifyStatusUpdated(DefaultSingleDocumentModel.this);
+				}
+			}
+
+		});
 	}
 
 	/**
@@ -79,6 +116,7 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	@Override
 	public void setFilePath(Path path) {
 		this.path = Objects.requireNonNull(path);
+		callListeners(false);
 	}
 
 	/**
@@ -171,6 +209,22 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Method informs every listener that change was made. If second argument is
+	 * <code>true</code> modified status is changed. Otherwise path location is
+	 * changed
+	 * 
+	 * @param flag
+	 *            - represent which change was made
+	 */
+	private void callListeners(boolean flag) {
+		if (flag == true) { // modification change
+			listeners.forEach(e -> e.documentModifyStatusUpdated(this));
+		} else {
+			listeners.forEach(e -> e.documentFilePathUpdated(this));
+		}
 	}
 
 }
