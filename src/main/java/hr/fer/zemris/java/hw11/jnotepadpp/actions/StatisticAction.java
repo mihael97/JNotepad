@@ -80,7 +80,7 @@ public class StatisticAction extends AbstractAction {
 							+ documentModel.getCurrentDocument().getTextComponent().getText().length()
 							+ provider.getString("statistic2") + numberOfNonBlanks + provider.getString("statistic3")
 							+ documentModel.getCurrentDocument().getTextComponent().getLineCount()
-							+ provider.getString("statistic3"),
+							+ provider.getString("statistic4"),
 					provider.getString("statistic4"), JOptionPane.INFORMATION_MESSAGE);
 		} else {
 			JOptionPane.showMessageDialog(frame, provider.getString("statistic5"), provider.getString("statistic"),
