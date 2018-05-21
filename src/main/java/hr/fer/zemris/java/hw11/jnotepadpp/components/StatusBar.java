@@ -1,7 +1,17 @@
 package hr.fer.zemris.java.hw11.jnotepadpp.components;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import javax.swing.Timer;
+
 import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 
 /**
@@ -55,16 +65,32 @@ public class StatusBar extends JToolBar {
 	 * Method sets components to their places
 	 */
 	private void initGUI() {
+		setLayout(new BorderLayout());
+		SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+
+		setBorder(BorderFactory.createEtchedBorder());
 		setFloatable(true);
-		add(length);
+		JPanel panel=new JPanel();
+		add(panel,BorderLayout.LINE_START);
+		panel.add(length);
 		addSeparator();
-		add(ln);
+		panel.add(ln);
 		addSeparator();
-		add(col);
+		panel.add(col);
 		addSeparator();
-		add(sel);
+		panel.add(sel);
 		addSeparator();
 
+		JLabel clock = new JLabel(format.format(new Date()));
+		add(clock, BorderLayout.LINE_END);
+
+		Timer timer = new Timer(1000, new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				clock.setText(format.format(new Date()));
+			}
+		});
+		timer.start();
 	}
 
 	/**

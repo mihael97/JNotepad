@@ -186,10 +186,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			}
 		}
 
-		// model.addSingleDocumentListener(this);
-		// documents.add(model);
-		// model.setModified(false);
-		//
 		documents.add(model);
 		this.add(path.getFileName().toString(), new JScrollPane(model.getTextComponent()));
 		this.setSelectedIndex(this.getTabCount() - 1);
@@ -233,6 +229,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 		model.setModified(false);
 		this.setTitleAt(this.getSelectedIndex(), newPath.getFileName().toString());
+		this.setIconAt(this.getSelectedIndex(), saved);
 		callListeners(model, current, 1);
 		current = model;
 	}

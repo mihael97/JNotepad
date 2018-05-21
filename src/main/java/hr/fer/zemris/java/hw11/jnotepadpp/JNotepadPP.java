@@ -156,6 +156,11 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	private LocalizedJMenu sort;
 
 	/**
+	 * Localized {@link JMenu} with function for font case changing
+	 */
+	private LocalizedJMenu caseMenu;
+
+	/**
 	 * Bridge between user and {@link LocalizationProvider}
 	 */
 	private LocalizationProviderBridge provider;
@@ -321,7 +326,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		menuBar.add(tool);
 
 		// case submenu
-		LocalizedJMenu caseMenu = new LocalizedJMenu("case", provider);
+		caseMenu = new LocalizedJMenu("case", provider);
 		tool.add(caseMenu);
 
 		addItem(upperCaseChange, caseMenu, toolBar);
@@ -526,6 +531,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	private void calculateBar(JTextArea source) {
 		try {
 			int line = source.getLineOfOffset(source.getCaretPosition());
+
 			statusBar.setLength(source.getDocument().getLength());
 			statusBar.setLn(line + 1);
 			statusBar.setCol(source.getCaretPosition() - source.getLineStartOffset(line) + 1);
@@ -533,12 +539,14 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 
 			if (statusBar.getSel() == 0 || statusBar.getLength() == 0) {
 				sort.setEnabled(false);
+				caseMenu.setEnabled(false);
 			} else {
 				sort.setEnabled(true);
+				caseMenu.setEnabled(true);
+
 			}
 
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, provider.getString("calculateerror"));
 		}
 	}
 
