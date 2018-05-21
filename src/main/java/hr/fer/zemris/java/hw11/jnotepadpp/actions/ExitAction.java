@@ -1,16 +1,14 @@
 package hr.fer.zemris.java.hw11.jnotepadpp.actions;
 
 import java.awt.event.ActionEvent;
-import java.nio.file.Path;
 import java.util.Objects;
 
 import javax.swing.AbstractAction;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import hr.fer.zemris.java.hw11.jnotepadpp.DefaultMultipleDocumentModel;
-import hr.fer.zemris.java.hw11.jnotepadpp.DefaultSingleDocumentModel;
+import hr.fer.zemris.java.hw11.jnotepadpp.Util;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
 import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProviderBridge;
@@ -77,26 +75,7 @@ public class ExitAction extends AbstractAction {
 						provider.getString("exit1") + doc.getFilePath() + provider.getString("exit2"), "Modified file",
 						JOptionPane.YES_NO_CANCEL_OPTION);
 				if (response == JOptionPane.YES_OPTION) {
-
-					Path path;
-
-					if (doc.getFilePath() == null) {
-						JFileChooser jfc = new JFileChooser();
-
-						jfc.setDialogTitle(provider.getString("exit3"));
-						if (jfc.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION) {
-							JOptionPane.showMessageDialog(frame, provider.getString("exit4"),
-									provider.getString("error"), JOptionPane.WARNING_MESSAGE);
-							return;
-						}
-
-						path = jfc.getSelectedFile().toPath();
-					} else {
-						path = doc.getFilePath();
-					}
-
-					documentModel.saveDocument(new DefaultSingleDocumentModel(path, doc.getTextComponent().getText()),
-							path);
+					Util.getPath(frame, doc, provider, documentModel);
 				} else if (response == JOptionPane.NO_OPTION) {
 					continue;
 				} else {

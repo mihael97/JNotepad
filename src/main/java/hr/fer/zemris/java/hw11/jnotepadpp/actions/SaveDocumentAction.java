@@ -92,7 +92,6 @@ public class SaveDocumentAction extends AbstractAction {
 				return;
 			}
 			document.setFilePath(jfc.getSelectedFile().toPath());
-
 		}
 
 		documentModel.saveDocument(document, document.getFilePath());

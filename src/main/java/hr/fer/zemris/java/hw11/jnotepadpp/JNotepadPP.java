@@ -227,7 +227,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 			saveDocumentAction = new SaveDocumentAction(this, documentModel, false, provider);
 			exitAction = new ExitAction(documentModel, this, provider);
 			openBlankAction = new OpenBlankAction(documentModel);
-			closeDocument = new CloseAction(documentModel);
+			closeDocument = new CloseAction(documentModel, this, provider);
 			statistic = new StatisticAction(documentModel, this, provider);
 			cutAction = new CopyCutAction(documentModel, true);
 			copyAction = new CopyCutAction(documentModel, false);
@@ -262,6 +262,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		menuBar.add(file);
 
 		addItem(openBlankAction, file, toolBar);
+		addItem(openDocumentAction, file, toolBar);
 		addItem(saveDocumentAction, file, toolBar);
 		addItem(saveAsChangeAction, file, toolBar);
 		addItem(closeDocument, file, toolBar);
