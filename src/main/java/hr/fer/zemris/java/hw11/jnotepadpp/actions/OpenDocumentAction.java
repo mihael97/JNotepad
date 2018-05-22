@@ -85,7 +85,12 @@ public class OpenDocumentAction extends AbstractAction {
 			return;
 		}
 
-		model.loadDocument(filePath);
+		try {
+			model.loadDocument(filePath);
+		} catch (IllegalArgumentException e) {
+			JOptionPane.showMessageDialog(frame, provider.getString("pathError"), provider.getString("error"),
+					JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 }

@@ -82,22 +82,24 @@ public class SaveDocumentAction extends AbstractAction {
 
 		SingleDocumentModel document = documentModel.getCurrentDocument();
 
-		if (document.getFilePath() == null || flag == true) {
-			JFileChooser jfc = new JFileChooser();
+		if (document != null) {
+			if (document.getFilePath() == null || flag == true) {
+				JFileChooser jfc = new JFileChooser();
 
-			jfc.setDialogTitle("Save document");
-			if (jfc.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION) {
-				JOptionPane.showMessageDialog(frame, provider.getString("exit4"), provider.getString("error"),
-						JOptionPane.WARNING_MESSAGE);
-				return;
+				jfc.setDialogTitle("Save document");
+				if (jfc.showSaveDialog(frame) != JFileChooser.APPROVE_OPTION) {
+					JOptionPane.showMessageDialog(frame, provider.getString("exit4"), provider.getString("error"),
+							JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				document.setFilePath(jfc.getSelectedFile().toPath());
 			}
-			document.setFilePath(jfc.getSelectedFile().toPath());
+
+			documentModel.saveDocument(document, document.getFilePath());
+			JOptionPane.showMessageDialog(frame, provider.getString("fileStored"), provider.getString("information"),
+					JOptionPane.INFORMATION_MESSAGE);
+
 		}
-
-		documentModel.saveDocument(document, document.getFilePath());
-		JOptionPane.showMessageDialog(frame, provider.getString("fileStored"), provider.getString("information"),
-				JOptionPane.INFORMATION_MESSAGE);
-
 	}
 
 }

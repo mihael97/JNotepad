@@ -50,24 +50,23 @@ public class PasteAction extends AbstractAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		Document document = model.getCurrentDocument().getTextComponent().getDocument();
+		if (model.getCurrentDocument() != null) {
+			Document document = model.getCurrentDocument().getTextComponent().getDocument();
 
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		DataFlavor flavor = DataFlavor.stringFlavor;
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			DataFlavor flavor = DataFlavor.stringFlavor;
 
-		if (clipboard.isDataFlavorAvailable(flavor)) {
-			try {
-				document.insertString(model.getCurrentDocument().getTextComponent().getCaretPosition(),
-						(String) clipboard.getData(flavor), null);
-			} catch (BadLocationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnsupportedFlavorException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if (clipboard.isDataFlavorAvailable(flavor)) {
+				try {
+					document.insertString(model.getCurrentDocument().getTextComponent().getCaretPosition(),
+							(String) clipboard.getData(flavor), null);
+				} catch (BadLocationException e) {
+					e.printStackTrace();
+				} catch (UnsupportedFlavorException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 

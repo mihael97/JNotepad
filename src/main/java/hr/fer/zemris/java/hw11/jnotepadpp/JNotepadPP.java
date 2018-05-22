@@ -6,6 +6,8 @@ import java.awt.GridLayout;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.JFrame;
@@ -45,8 +47,11 @@ import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProviderBridge;
 /**
  * Public class implements text editor with many features like: <br>
  * saving,copying and text cutting<br>
- * statistics of current text(text length,number of non-space characters
- * etc)<br>
+ * statistics of current text(text length,number of non-space characters and
+ * rows)<br>
+ * ascending and descending sorting of lines<br>
+ * 
+ * etc.
  * 
  * @author Mihael
  *
@@ -166,6 +171,18 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	private LocalizationProviderBridge provider;
 
 	/**
+	 * Universal caret listener which is set to every text area from documents for
+	 * modification tracking
+	 */
+	private CaretListener listener = new CaretListener() {
+
+		@Override
+		public void caretUpdate(CaretEvent e) {
+			calculateBar(((JTextArea) e.getSource()));
+		}
+	};
+
+	/**
 	 * Public constructor
 	 */
 	public JNotepadPP() {
@@ -175,7 +192,6 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 			@Override
 			public void windowClosing(WindowEvent arg0) {
 				exitAction.actionPerformed(null);
-
 			}
 
 		});
@@ -196,22 +212,65 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	}
 
 	/**
-	 * Method initializes user interface
+	 * Method initializes user interface. User interface is structured in three
+	 * parts. First part,on the top of frame,is place where we store our localized
+	 * menu bar and tool bar. In center part we set
+	 * {@link DefaultMultipleDocumentModel} which contains and shows all active
+	 * documents. On the bottom we have status bar where statistic of current active
+	 * document is shown also like real-time clock
 	 */
 	private void initGUI() {
-		setLayout(new BorderLayout());
+		this.setLayout(new BorderLayout());
 
 		provider = new LocalizationProviderBridge(LocalizationProvider.getInstance());
 		provider.connect();
 
 		documentModel = new DefaultMultipleDocumentModel(this);
-		add((Component) documentModel, BorderLayout.CENTER); // we need to cast to component because we are adding
-																// element in BorderLayout but
-																// DefaultMultipleDocumentModel already extends
-																// JTabedPane
+		documentModel.addMultipleDocumentListener(new MultipleDocumentListener() {
+			@Override
+			public void documentRemoved(SingleDocumentModel model) {
+				model.getTextComponent().removeCaretListener(listener);
+				calculateBar(model.getTextComponent());
+			}
+
+			@Override
+			public void documentAdded(SingleDocumentModel model) {
+				model.getTextComponent().addCaretListener(listener);
+				calculateBar(model.getTextComponent());
+			}
+
+			@Override
+			public void currentDocumentChanged(SingleDocumentModel previousModel, SingleDocumentModel currentModel) {
+				if (previousModel == null && currentModel == null) {
+					JOptionPane.showMessageDialog(JNotepadPP.this, provider.getString("nullDocuments"),
+							provider.getString("error"), JOptionPane.ERROR_MESSAGE);
+				}
+
+				setFramePath(currentModel);
+
+				if (previousModel != null) {
+					previousModel.getTextComponent().removeCaretListener(listener);
+				}
+
+				if (currentModel != null) {
+					currentModel.getTextComponent().addCaretListener(listener);
+				} else {
+					statusBar.setLength(0);
+					statusBar.setCol(0);
+					statusBar.setLn(0);
+					return;
+				}
+
+				calculateBar(currentModel.getTextComponent());
+			}
+		});
+		this.add((Component) documentModel, BorderLayout.CENTER); // we need to cast to component because we are adding
+																	// element in BorderLayout but
+																	// DefaultMultipleDocumentModel already extends
+																	// JTabedPane
 
 		statusBar = new StatusBar();
-		add(statusBar, BorderLayout.PAGE_END);
+		this.add(statusBar, BorderLayout.PAGE_END);
 		initializeConstants();
 
 		documentActions();
@@ -224,7 +283,7 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	}
 
 	/**
-	 * Method initializes actions constants
+	 * Method initializes actions constants.
 	 */
 	private void initializeConstants() {
 
@@ -246,12 +305,13 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 			ascendingAction = new SortAction(documentModel, true);
 			descendignAction = new SortAction(documentModel, false);
 		} catch (Exception e) {
-			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, e.getLocalizedMessage(), provider.getString("error"),
+					JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
 	/**
-	 * Method creates universal menu bar with menus
+	 * Method creates universal menu bar with menus and tool bar wihh buttons
 	 */
 	private void createMenuBar() {
 		// new menu bar
@@ -261,7 +321,7 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 		JPanel panel = new JPanel(new GridLayout(2, 0));
 		panel.add(menuBar);
 		panel.add(toolBar);
-		add(panel, BorderLayout.PAGE_START);
+		this.add(panel, BorderLayout.PAGE_START);
 
 		// menu file
 		LocalizedJMenu file = new LocalizedJMenu("file", provider);
@@ -284,7 +344,6 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 		addItem(copyAction, text, toolBar);
 		addItem(pasteAction, text, toolBar);
 		addItem(statistic, text, toolBar);
-		text.add(new LocalizedJMenuItem(statistic, provider));
 
 		toolBar.addSeparator();
 
@@ -313,7 +372,7 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	}
 
 	/**
-	 * Method creates tool menu and adds it to Menu bar
+	 * Method creates tool menu and adds it to Menu bar and tool bar
 	 * 
 	 * @param menuBar
 	 *            - menu bar
@@ -365,183 +424,150 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	 * Method initializes actions for opening,saving,closing and program terminating
 	 */
 	private void documentActions() {
-		openDocumentAction.putValue(Action.NAME, "open");
-		openDocumentAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control O"));
-		openDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_0);
-		openDocumentAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("open_desc"));
+		setAction(openDocumentAction, KeyStroke.getKeyStroke("control O"), Arrays.asList(KeyEvent.VK_O), "open",
+				"open_desc");
+		setAction(saveDocumentAction, KeyStroke.getKeyStroke("control S"), Arrays.asList(KeyEvent.VK_S), "save",
+				"save_desc");
+		setAction(saveAsChangeAction, KeyStroke.getKeyStroke("control shift S"),
+				Arrays.asList(KeyEvent.VK_SHIFT, KeyEvent.VK_S), "saveAs", "saveAs_desc");
+		setAction(exitAction, KeyStroke.getKeyStroke("control E"), Arrays.asList(KeyEvent.VK_E), "exit", "exit_desc");
 
-		saveDocumentAction.putValue(Action.NAME, "save");
-		saveDocumentAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control S"));
-		saveDocumentAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_S);
-		saveDocumentAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("save_desc"));
+		setAction(openBlankAction, KeyStroke.getKeyStroke("control N"), Arrays.asList(KeyEvent.VK_N), "new",
+				"new_desc");
 
-		saveAsChangeAction.putValue(Action.NAME, "saveAs");
-		saveAsChangeAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control F12"));
-		saveAsChangeAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_F12);
-		saveAsChangeAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("saveAs_desc"));
-
-		exitAction.putValue(Action.NAME, "exit");
-		exitAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control E"));
-		exitAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
-		exitAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("exit_desc"));
-
-		openBlankAction.putValue(Action.NAME, "new");
-		openBlankAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control N"));
-		openBlankAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_N);
-		openBlankAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("new_desc"));
-
-		closeDocument.putValue(Action.NAME, "close");
-		closeDocument.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift C"));
-		closeDocument.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_E);
-		closeDocument.putValue(Action.SHORT_DESCRIPTION, provider.getString("close_desc"));
+		setAction(closeDocument, KeyStroke.getKeyStroke("control shift C"),
+				Arrays.asList(KeyEvent.VK_SHIFT, KeyEvent.VK_S), "close", "close_desc");
 	}
 
 	/**
 	 * Method initializes actions for text editing
 	 */
 	private void textAction() {
-		cutAction.putValue(Action.NAME, "cut");
-		cutAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control X"));
-		cutAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_X);
-		cutAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("cut_desc"));
 
-		copyAction.putValue(Action.NAME, "copy");
-		copyAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control C"));
-		copyAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_C);
-		copyAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("copy_desc"));
+		setAction(cutAction, KeyStroke.getKeyStroke("control X"), Arrays.asList(KeyEvent.VK_X), "cut", "cut_desc");
 
-		pasteAction.putValue(Action.NAME, "paste");
-		pasteAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control V"));
-		pasteAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_V);
-		pasteAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("paste_desc"));
+		setAction(copyAction, KeyStroke.getKeyStroke("control C"), Arrays.asList(KeyEvent.VK_C), "copy", "copy_desc");
 
-		statistic.putValue(Action.NAME, "statistic");
-		statistic.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control T"));
-		statistic.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_T);
-		statistic.putValue(Action.SHORT_DESCRIPTION, provider.getString("statistic_desc"));
+		setAction(pasteAction, KeyStroke.getKeyStroke("control V"), Arrays.asList(KeyEvent.VK_V), "paste",
+				"paste_desc");
+
+		setAction(statistic, KeyStroke.getKeyStroke("control T"), Arrays.asList(KeyEvent.VK_T), "statistic",
+				"statistic_desc");
 	}
 
 	/**
 	 * Method initializes actions for line sorting
 	 */
 	private void sortActions() {
-		uniqueAction.putValue(Action.NAME, "unique");
-		uniqueAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift U"));
-		uniqueAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_U);
-		uniqueAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("unique_desc"));
 
-		ascendingAction.putValue(Action.NAME, "ascending");
-		ascendingAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift A"));
-		ascendingAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_A);
-		ascendingAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("ascending_desc"));
+		setAction(uniqueAction, KeyStroke.getKeyStroke("control shift U"),
+				Arrays.asList(KeyEvent.VK_SHIFT, KeyEvent.VK_U), "unique", "unique_desc");
 
-		descendignAction.putValue(Action.NAME, "descending");
-		descendignAction.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control shift D"));
-		descendignAction.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_SHIFT | KeyEvent.VK_D);
-		descendignAction.putValue(Action.SHORT_DESCRIPTION, provider.getString("descending_desc"));
+		setAction(ascendingAction, KeyStroke.getKeyStroke("control shift A"),
+				Arrays.asList(KeyEvent.VK_SHIFT, KeyEvent.VK_A), "ascending", "ascending_desc");
+
+		setAction(descendignAction, KeyStroke.getKeyStroke("control shift D"),
+				Arrays.asList(KeyEvent.VK_SHIFT, KeyEvent.VK_I), "descending", "descending_desc");
 	}
 
 	/**
 	 * Method sets actions for every case(uppercase,lowercase,invert) action
 	 */
 	private void caseActions() {
-		invertCaseChange.putValue(Action.NAME, "invert");
-		invertCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control I"));
-		invertCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_I);
-		invertCaseChange.putValue(Action.SHORT_DESCRIPTION, provider.getString("invert_desc"));
 
-		upperCaseChange.putValue(Action.NAME, "uppercase");
-		upperCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control U"));
-		upperCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_U);
-		upperCaseChange.putValue(Action.SHORT_DESCRIPTION, provider.getString("uppercase_desc"));
+		setAction(invertCaseChange, KeyStroke.getKeyStroke("control I"), Arrays.asList(KeyEvent.VK_I), "invert",
+				"invert_desc");
 
-		lowerCaseChange.putValue(Action.NAME, "lowercase");
-		lowerCaseChange.putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke("control M"));
-		lowerCaseChange.putValue(Action.MNEMONIC_KEY, KeyEvent.VK_M);
-		lowerCaseChange.putValue(Action.SHORT_DESCRIPTION, provider.getString("lowercase_desc"));
+		setAction(upperCaseChange, KeyStroke.getKeyStroke("control U"), Arrays.asList(KeyEvent.VK_U), "uppercase",
+				"uppercase_desc");
+
+		setAction(lowerCaseChange, KeyStroke.getKeyStroke("control M"), Arrays.asList(KeyEvent.VK_M), "lowercase",
+				"lowercase_desc");
 	}
 
-	public StatusBar getStatusBar() {
-		return statusBar;
+	/**
+	 * Method sets preferences for given action
+	 * 
+	 * @param action
+	 *            - action to which we want add preferences
+	 * @param keystroke
+	 *            - keystroke combination
+	 * @param list
+	 *            - list of keys which are use in mnemonic key
+	 * @param name
+	 *            - key for catching action name
+	 * @param descName
+	 *            - key for catching action description name
+	 */
+	private void setAction(Action action, KeyStroke keystroke, List<Integer> list, String name, String descName) {
+		action.putValue(Action.NAME, name);
+		action.putValue(Action.ACCELERATOR_KEY, keystroke);
+
+		if (list.size() == 1) {
+			action.putValue(Action.MNEMONIC_KEY, list.get(0));
+		} else if (list.size() == 2) {
+			action.putValue(Action.MNEMONIC_KEY, list.get(0) | list.get(1));
+		} else {
+			throw new IllegalArgumentException("Too many arguments!");
+		}
+		action.putValue(Action.SHORT_DESCRIPTION, provider.getString(descName));
 	}
 
-	public LocalizedJMenu getSortMenu() {
-		return sortMenu;
+	/**
+	 * Method refreshes status bar with updated informations. Informations are
+	 * updated after every caret position change in current active document
+	 * 
+	 * @param source
+	 *            - {@link JTextArea}
+	 */
+	private void calculateBar(JTextArea source) {
+		try {
+			int line = source.getLineOfOffset(source.getCaretPosition());
+
+			statusBar.setLength(source.getDocument().getLength());
+			statusBar.setLn(line + 1);
+			statusBar.setCol(source.getCaretPosition() - source.getLineStartOffset(line) + 1);
+			statusBar.setSel(Math.abs(source.getCaret().getDot() - source.getCaret().getMark()));
+
+			updateMenus();
+		} catch (Exception e) {
+			System.out.println("error!");
+		}
 	}
 
-	public void setSortMenu(LocalizedJMenu sortMenu) {
-		this.sortMenu = sortMenu;
+	/**
+	 * Method sets visibility of sort and case menu. If selected text doesn't
+	 * exist,menus are <code>disabled</code>. Otherwise they are
+	 * <code>enabled</code>
+	 */
+	private void updateMenus() {
+
+		if (statusBar.getSel() == 0) {
+			sortMenu.setEnabled(false);
+			caseMenu.setEnabled(false);
+		} else {
+			sortMenu.setEnabled(true);
+			caseMenu.setEnabled(true);
+		}
+
 	}
 
-	public LocalizedJMenu getCaseMenu() {
-		return caseMenu;
+	/**
+	 * Method sets frame title. Frame title is path of current active document. If
+	 * document is not stored(document doesn't have path) new title fill be empty(
+	 * <code>""</code>)
+	 * 
+	 * @param model
+	 *            - current active document
+	 */
+	private void setFramePath(SingleDocumentModel model) {
+		if (model != null) {
+			if (model.getFilePath() != null) {
+				this.setTitle(model.getFilePath().toString());
+			} else {
+				this.setTitle("");
+			}
+		}
 	}
-
-	public void setCaseMenu(LocalizedJMenu caseMenu) {
-		this.caseMenu = caseMenu;
-	}
-
-	// /**
-	// * Method is called when current document is changed
-	// *
-	// * @param previousModel
-	// * - previous version
-	// * @param currentModel
-	// * - current version
-	// */
-	// @Override
-	// public void currentDocumentChanged(SingleDocumentModel previousModel,
-	// SingleDocumentModel currentModel) {
-	//
-	// documentRemoved(previousModel);
-	// documentAdded(currentModel);
-	//
-	// if (previousModel == null && currentModel == null) {
-	// throw new IllegalArgumentException(provider.getString("nullarguments"));
-	// }
-	//
-	// if (currentModel.getFilePath() != null) {
-	// setTitle(currentModel.getFilePath().toString());
-	// } else {
-	// setTitle("");
-	// }
-	//
-	// calculateBar(currentModel.getTextComponent());
-	// }
-	//
-	// /**
-	// * Method is called when document is added to list of active documents
-	// *
-	// * @param model
-	// * - document we added
-	// */
-	// @Override
-	// public void documentAdded(SingleDocumentModel model) {
-	// if (model != null)
-	// model.getTextComponent().addCaretListener(this);
-	// }
-	//
-	// /**
-	// * Method is called when document is removed form list of active documents
-	// *
-	// * @param model
-	// * - document we removed
-	// */
-	// @Override
-	// public void documentRemoved(SingleDocumentModel model) {
-	// if (model != null)
-	// model.getTextComponent().removeCaretListener(this);
-	// }
-	//
-	// /**
-	// * Method is called when caret position in document is changed
-	// *
-	// * @param event
-	// * - informations about last caret change
-	// */
-	// @Override
-	// public void caretUpdate(CaretEvent event) {
-	// calculateBar((JTextArea) event.getSource());
-	// }
 
 }

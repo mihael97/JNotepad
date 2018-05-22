@@ -116,7 +116,7 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 	@Override
 	public void setFilePath(Path path) {
 		this.path = Objects.requireNonNull(path);
-		callListeners(false);
+		listeners.forEach(e -> e.documentFilePathUpdated(this));
 	}
 
 	/**
@@ -193,8 +193,8 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 
 	/**
 	 * Method checks if two {@link DefaultSingleDocumentModel} are same. Two
-	 * instaces are same if they have same <code>path</code> or <code>path</code> is
-	 * <code>null</code>
+	 * instances are same if they have same <code>path</code> or <code>path</code>
+	 * is <code>null</code>
 	 * 
 	 * @param obj
 	 *            - object we want to check
@@ -216,21 +216,4 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 
 		return false;
 	}
-
-	/**
-	 * Method informs every listener that change was made. If second argument is
-	 * <code>true</code> modified status is changed. Otherwise path location is
-	 * changed
-	 * 
-	 * @param flag
-	 *            - represent which change was made
-	 */
-	private void callListeners(boolean flag) {
-		if (flag == true) { // modification change
-			listeners.forEach(e -> e.documentModifyStatusUpdated(this));
-		} else {
-			listeners.forEach(e -> e.documentFilePathUpdated(this));
-		}
-	}
-
 }

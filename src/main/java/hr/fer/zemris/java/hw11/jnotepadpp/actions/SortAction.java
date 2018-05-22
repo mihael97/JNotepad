@@ -60,50 +60,52 @@ public class SortAction extends AbstractAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		JTextArea area = documentModel.getCurrentDocument().getTextComponent();
-		Document doc = area.getDocument();
+		if (documentModel.getCurrentDocument() != null) {
+			JTextArea area = documentModel.getCurrentDocument().getTextComponent();
+			Document doc = area.getDocument();
 
-		// selected text
-		int offset = Math.min(area.getCaret().getDot(), area.getCaret().getMark());
-		int length = Math.abs(area.getCaret().getDot() - area.getCaret().getMark());
+			// selected text
+			int offset = Math.min(area.getCaret().getDot(), area.getCaret().getMark());
+			int length = Math.abs(area.getCaret().getDot() - area.getCaret().getMark());
 
-		try {
-			offset = area.getLineStartOffset(area.getLineOfOffset(offset));
-			length = area.getLineEndOffset(area.getLineOfOffset(length + offset));
-			String selectedText = doc.getText(offset, length - offset);
-			List<String> text = Arrays.asList(selectedText.split("\\r?\\n"));
-			
-			Collator collator = Collator.getInstance(new Locale(LocalizationProvider.getInstance().getLanguage()));
+			try {
+				offset = area.getLineStartOffset(area.getLineOfOffset(offset));
+				length = area.getLineEndOffset(area.getLineOfOffset(length + offset));
+				String selectedText = doc.getText(offset, length - offset);
+				List<String> text = Arrays.asList(selectedText.split("\\r?\\n"));
 
-			Collections.sort(text, new Comparator<String>() {
+				Collator collator = Collator.getInstance(new Locale(LocalizationProvider.getInstance().getLanguage()));
 
-				@Override
-				public int compare(String first, String second) {
-					if (flag == true) {
-						return collator.compare(first, second);
+				Collections.sort(text, new Comparator<String>() {
+
+					@Override
+					public int compare(String first, String second) {
+						if (flag == true) {
+							return collator.compare(first, second);
+						}
+
+						return collator.compare(second, first);
+					}
+				});
+				int lines = area.getLineCount();
+				doc.remove(offset, length - offset);
+
+				for (String string : text) {
+					doc.insertString(offset, string, null);
+
+					if ((--lines) > 0) {
+						doc.insertString(offset + string.length(), "\n", null);
+					} else {
+						doc.insertString(offset + string.length(), "", null);
 					}
 
-					return collator.compare(second, first);
-				}
-			});
-			int lines = area.getLineCount();
-			doc.remove(offset, length - offset);
-
-			for (String string : text) {
-				doc.insertString(offset, string, null);
-
-				if ((--lines) > 0) {
-					doc.insertString(offset + string.length(), "\n", null);
-				} else {
-					doc.insertString(offset + string.length(), "", null);
+					offset += string.length() + 1;
 				}
 
-				offset += string.length() + 1;
+			} catch (BadLocationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-
-		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

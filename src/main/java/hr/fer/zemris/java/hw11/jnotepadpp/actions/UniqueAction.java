@@ -54,43 +54,44 @@ public class UniqueAction extends AbstractAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		JTextArea area = documentModel.getCurrentDocument().getTextComponent();
-		Document doc = area.getDocument();
+		if (documentModel.getCurrentDocument() != null) {
+			JTextArea area = documentModel.getCurrentDocument().getTextComponent();
+			Document doc = area.getDocument();
 
-		// selected text
-		int offset = Math.min(area.getCaret().getDot(), area.getCaret().getMark());
-		int length = Math.abs(area.getCaret().getDot() - area.getCaret().getMark());
+			// selected text
+			int offset = Math.min(area.getCaret().getDot(), area.getCaret().getMark());
+			int length = Math.abs(area.getCaret().getDot() - area.getCaret().getMark());
 
-		try {
-			length = area.getLineEndOffset(area.getLineOfOffset(length + offset));
-			offset = area.getLineStartOffset(area.getLineOfOffset(offset));
-			String text = doc.getText(offset, length - offset);
+			try {
+				length = area.getLineEndOffset(area.getLineOfOffset(length + offset));
+				offset = area.getLineStartOffset(area.getLineOfOffset(offset));
+				String text = doc.getText(offset, length - offset);
 
-			Set<String> lines = new LinkedHashSet<>();
+				Set<String> lines = new LinkedHashSet<>();
 
-			for (String str : Arrays.asList(text.split("\\r?\\n"))) {
-				lines.add(str);
-			}
-
-			int index = area.getLineCount();
-			doc.remove(offset, length - offset);
-
-			for (String string : lines) {
-				doc.insertString(offset, string, null);
-
-				--index;
-				if (index > 0) {
-					doc.insertString(offset + string.length(), "\n", null);
-				} else {
-					doc.insertString(offset + string.length(), "", null);
+				for (String str : Arrays.asList(text.split("\\r?\\n"))) {
+					lines.add(str);
 				}
 
-				offset += string.length() + 1;
+				int index = area.getLineCount();
+				doc.remove(offset, length - offset);
+
+				for (String string : lines) {
+					doc.insertString(offset, string, null);
+
+					--index;
+					if (index > 0) {
+						doc.insertString(offset + string.length(), "\n", null);
+					} else {
+						doc.insertString(offset + string.length(), "", null);
+					}
+
+					offset += string.length() + 1;
+				}
+			} catch (BadLocationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
-
 }

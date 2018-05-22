@@ -58,27 +58,29 @@ public class CaseChangeAction extends AbstractAction {
 	 */
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		JTextArea editor = documentModel.getCurrentDocument().getTextComponent();
-		Document doc = editor.getDocument();
+		if (documentModel.getCurrentDocument() != null) {
+			JTextArea editor = documentModel.getCurrentDocument().getTextComponent();
+			Document doc = editor.getDocument();
 
-		int len = Math.abs(editor.getCaret().getDot() - editor.getCaret().getMark());
+			int len = Math.abs(editor.getCaret().getDot() - editor.getCaret().getMark());
 
-		int offset = 0;
+			int offset = 0;
 
-		if (len != 0) {
-			offset = Math.min(editor.getCaret().getDot(), editor.getCaret().getMark());
-		} else {
-			len = doc.getLength();
-		}
+			if (len != 0) {
+				offset = Math.min(editor.getCaret().getDot(), editor.getCaret().getMark());
+			} else {
+				len = doc.getLength();
+			}
 
-		try {
-			String text = doc.getText(offset, len);
-			text = changeCase(text);
+			try {
+				String text = doc.getText(offset, len);
+				text = changeCase(text);
 
-			doc.remove(offset, len);
-			doc.insertString(offset, text, null);
-		} catch (BadLocationException e) {
-			e.printStackTrace();
+				doc.remove(offset, len);
+				doc.insertString(offset, text, null);
+			} catch (BadLocationException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
