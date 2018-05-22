@@ -51,7 +51,7 @@ import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProviderBridge;
  * @author Mihael
  *
  */
-public class JNotepadPP extends JFrame implements MultipleDocumentListener, CaretListener {
+public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, CaretListener {
 
 	/**
 	 * serialVersionUID
@@ -153,7 +153,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	/**
 	 * Localized {@link JMenu} with functions for line sorting
 	 */
-	private LocalizedJMenu sort;
+	private LocalizedJMenu sortMenu;
 
 	/**
 	 * Localized {@link JMenu} with function for font case changing
@@ -200,16 +200,16 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 	 */
 	private void initGUI() {
 		setLayout(new BorderLayout());
-		documentModel = new DefaultMultipleDocumentModel();
-		documentModel.addMultipleDocumentListener(this);
 
 		provider = new LocalizationProviderBridge(LocalizationProvider.getInstance());
 		provider.connect();
 
+		documentModel = new DefaultMultipleDocumentModel(this);
 		add((Component) documentModel, BorderLayout.CENTER); // we need to cast to component because we are adding
 																// element in BorderLayout but
 																// DefaultMultipleDocumentModel already extends
 																// JTabedPane
+
 		statusBar = new StatusBar();
 		add(statusBar, BorderLayout.PAGE_END);
 		initializeConstants();
@@ -220,6 +220,7 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		sortActions();
 
 		createMenuBar();
+
 	}
 
 	/**
@@ -334,15 +335,15 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		addItem(invertCaseChange, caseMenu, toolBar);
 
 		// Sort submenu
-		sort = new LocalizedJMenu("sort", provider);
-		sort.setOpaque(true);
-		tool.add(sort);
+		sortMenu = new LocalizedJMenu("sort", provider);
+		sortMenu.setOpaque(true);
+		tool.add(sortMenu);
 
 		toolBar.addSeparator();
 
-		addItem(ascendingAction, sort, toolBar);
-		addItem(descendignAction, sort, toolBar);
-		addItem(uniqueAction, sort, toolBar);
+		addItem(ascendingAction, sortMenu, toolBar);
+		addItem(descendignAction, sortMenu, toolBar);
+		addItem(uniqueAction, sortMenu, toolBar);
 	}
 
 	/**
@@ -460,94 +461,87 @@ public class JNotepadPP extends JFrame implements MultipleDocumentListener, Care
 		lowerCaseChange.putValue(Action.SHORT_DESCRIPTION, provider.getString("lowercase_desc"));
 	}
 
-	/**
-	 * Method is called when current document is changed
-	 * 
-	 * @param previousModel
-	 *            - previous version
-	 * @param currentModel
-	 *            - current version
-	 */
-	@Override
-	public void currentDocumentChanged(SingleDocumentModel previousModel, SingleDocumentModel currentModel) {
-
-		documentRemoved(previousModel);
-		documentAdded(currentModel);
-
-		if (previousModel == null && currentModel == null) {
-			throw new IllegalArgumentException(provider.getString("nullarguments"));
-		}
-
-		if (currentModel.getFilePath() != null) {
-			setTitle(currentModel.getFilePath().toString());
-		} else {
-			setTitle("");
-		}
-
-		calculateBar(currentModel.getTextComponent());
+	public StatusBar getStatusBar() {
+		return statusBar;
 	}
 
-	/**
-	 * Method is called when document is added to list of active documents
-	 * 
-	 * @param model
-	 *            - document we added
-	 */
-	@Override
-	public void documentAdded(SingleDocumentModel model) {
-		if (model != null)
-			model.getTextComponent().addCaretListener(this);
+	public LocalizedJMenu getSortMenu() {
+		return sortMenu;
 	}
 
-	/**
-	 * Method is called when document is removed form list of active documents
-	 * 
-	 * @param model
-	 *            - document we removed
-	 */
-	@Override
-	public void documentRemoved(SingleDocumentModel model) {
-		if (model != null)
-			model.getTextComponent().removeCaretListener(this);
+	public void setSortMenu(LocalizedJMenu sortMenu) {
+		this.sortMenu = sortMenu;
 	}
 
-	/**
-	 * Method is called when caret position in document is changed
-	 * 
-	 * @param event
-	 *            - informations about last caret change
-	 */
-	@Override
-	public void caretUpdate(CaretEvent event) {
-		calculateBar((JTextArea) event.getSource());
+	public LocalizedJMenu getCaseMenu() {
+		return caseMenu;
 	}
 
-	/**
-	 * Method refreshes status bar with updated informations
-	 * 
-	 * @param source
-	 *            - {@link JTextArea}
-	 */
-	private void calculateBar(JTextArea source) {
-		try {
-			int line = source.getLineOfOffset(source.getCaretPosition());
-
-			statusBar.setLength(source.getDocument().getLength());
-			statusBar.setLn(line + 1);
-			statusBar.setCol(source.getCaretPosition() - source.getLineStartOffset(line) + 1);
-			statusBar.setSel(Math.abs(source.getCaret().getDot() - source.getCaret().getMark()));
-
-			if (statusBar.getSel() == 0 || statusBar.getLength() == 0) {
-				sort.setEnabled(false);
-				caseMenu.setEnabled(false);
-			} else {
-				sort.setEnabled(true);
-				caseMenu.setEnabled(true);
-
-			}
-
-		} catch (Exception e) {
-		}
+	public void setCaseMenu(LocalizedJMenu caseMenu) {
+		this.caseMenu = caseMenu;
 	}
+
+	// /**
+	// * Method is called when current document is changed
+	// *
+	// * @param previousModel
+	// * - previous version
+	// * @param currentModel
+	// * - current version
+	// */
+	// @Override
+	// public void currentDocumentChanged(SingleDocumentModel previousModel,
+	// SingleDocumentModel currentModel) {
+	//
+	// documentRemoved(previousModel);
+	// documentAdded(currentModel);
+	//
+	// if (previousModel == null && currentModel == null) {
+	// throw new IllegalArgumentException(provider.getString("nullarguments"));
+	// }
+	//
+	// if (currentModel.getFilePath() != null) {
+	// setTitle(currentModel.getFilePath().toString());
+	// } else {
+	// setTitle("");
+	// }
+	//
+	// calculateBar(currentModel.getTextComponent());
+	// }
+	//
+	// /**
+	// * Method is called when document is added to list of active documents
+	// *
+	// * @param model
+	// * - document we added
+	// */
+	// @Override
+	// public void documentAdded(SingleDocumentModel model) {
+	// if (model != null)
+	// model.getTextComponent().addCaretListener(this);
+	// }
+	//
+	// /**
+	// * Method is called when document is removed form list of active documents
+	// *
+	// * @param model
+	// * - document we removed
+	// */
+	// @Override
+	// public void documentRemoved(SingleDocumentModel model) {
+	// if (model != null)
+	// model.getTextComponent().removeCaretListener(this);
+	// }
+	//
+	// /**
+	// * Method is called when caret position in document is changed
+	// *
+	// * @param event
+	// * - informations about last caret change
+	// */
+	// @Override
+	// public void caretUpdate(CaretEvent event) {
+	// calculateBar((JTextArea) event.getSource());
+	// }
 
 }

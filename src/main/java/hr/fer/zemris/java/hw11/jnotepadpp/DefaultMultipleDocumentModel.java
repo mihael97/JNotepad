@@ -10,9 +10,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+
+import hr.fer.zemris.java.hw11.jnotepadpp.components.StatusBar;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentListener;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.MultipleDocumentModel;
 import hr.fer.zemris.java.hw11.jnotepadpp.interfaces.SingleDocumentListener;
@@ -25,7 +31,8 @@ import hr.fer.zemris.java.hw11.jnotepadpp.local.LocalizationProvider;
  * @author Mihael
  *
  */
-public class DefaultMultipleDocumentModel extends JTabbedPane implements MultipleDocumentModel, SingleDocumentListener {
+public class DefaultMultipleDocumentModel extends JTabbedPane implements MultipleDocumentModel {// SingleDocumentListener
+																								// {
 
 	/**
 	 * serialVersionUID
@@ -55,14 +62,45 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	private ImageIcon unsaved;
 
 	/**
-	 * Default constructor
+	 * Reference to frame where this {@link DefaultMultipleDocumentModel} is
+	 * component
 	 */
-	public DefaultMultipleDocumentModel() {
-		documents = new ArrayList<>();
-		listeners = new ArrayList<>();
+	private JNotepadPP frame;
+
+	SingleDocumentListener listener = new SingleDocumentListener() {
+
+		@Override
+		public void documentModifyStatusUpdated(SingleDocumentModel model) {
+			SingleDocumentModel doc = documents.get(documents.indexOf(model));
+			changeListener(doc, model);
+			DefaultMultipleDocumentModel.this.setIconAt(documents.indexOf(doc), unsaved);
+		}
+
+		@Override
+		public void documentFilePathUpdated(SingleDocumentModel model) {
+			if (model.getFilePath() != null) {
+				frame.setTitle(model.getFilePath().getFileName().toString());
+			} else {
+				frame.setTitle("");
+			}
+		}
+	};
+
+	/**
+	 * Default constructor
+	 * 
+	 * @param frame
+	 *            - frame where this object is component
+	 * 
+	 */
+	public DefaultMultipleDocumentModel(JNotepadPP frame) {
+		this.documents = new ArrayList<>();
+		this.listeners = new ArrayList<>();
 		addListeners();
-		saved = loadImages("saved.png");
-		unsaved = loadImages("unsaved.png");
+		this.saved = loadImages("saved.png");
+		this.unsaved = loadImages("unsaved.png");
+		this.frame = Objects.requireNonNull(frame);
+		updateMenus(false);
 	}
 
 	/**
@@ -135,12 +173,29 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		// model.setModified(true);
 		// callListeners(model, null, 2);
 		current = model;
+		model.getTextComponent().addCaretListener(e -> {
+			calculateBar((JTextArea) e.getSource());
+		});
 		this.add("new", new JScrollPane(model.getTextComponent()));
 		documents.add(model);
 		this.setSelectedIndex(documents.size() - 1);
 		this.setIconAt(this.getSelectedIndex(), unsaved);
 
-		model.addSingleDocumentListener(this);
+		// model.addSingleDocumentListener(new SingleDocumentListener() {
+		//
+		// @Override
+		// public void documentModifyStatusUpdated(SingleDocumentModel model) {
+		// SingleDocumentModel doc = documents.get(documents.indexOf(model));
+		// changeListener(doc, model);
+		// DefaultMultipleDocumentModel.this.setIconAt(documents.indexOf(doc), unsaved);
+		// }
+		//
+		// @Override
+		// public void documentFilePathUpdated(SingleDocumentModel model) {
+		//
+		// }
+		// });
+		model.addSingleDocumentListener(listener);
 		model.setModified(true);
 
 		return model;
@@ -175,8 +230,11 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		}
 
 		String text = new String(context, StandardCharsets.UTF_8);
-
 		DefaultSingleDocumentModel model = new DefaultSingleDocumentModel(path, text);
+
+		model.getTextComponent().addCaretListener(e -> {
+			calculateBar((JTextArea) e.getSource());
+		});
 
 		for (SingleDocumentModel doc : documents) {
 			if (doc.equals(model)) {
@@ -191,11 +249,12 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		this.setSelectedIndex(this.getTabCount() - 1);
 		this.setIconAt(this.getSelectedIndex(), saved);
 
-		model.addSingleDocumentListener(this);
+		model.addSingleDocumentListener(listener);
 		model.setModified(false);
 
-		callListeners(documents.get(this.getSelectedIndex()), current, 1);
+		// callListeners(documents.get(this.getSelectedIndex()), current, 1);
 		current = model;
+		setFramePath(current);
 
 		// current = model;
 
@@ -230,8 +289,9 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		model.setModified(false);
 		this.setTitleAt(this.getSelectedIndex(), newPath.getFileName().toString());
 		this.setIconAt(this.getSelectedIndex(), saved);
-		callListeners(model, current, 1);
+		// callListeners(model, current, 1);
 		current = model;
+		setFramePath(current);
 	}
 
 	/**
@@ -246,18 +306,20 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 			return;
 		}
 
-		model.removeSingleDocumentListener(this);
+		model.removeSingleDocumentListener(listener);
 		documents.remove(model);
 
 		if (documents.size() != 0) {
 			current = documents.get(documents.size() - 1);
 		} else {
 			current = null;
+			updateMenus(false);
 		}
 
 		this.remove(this.getSelectedComponent());
-		callListeners(null, model, 3);
-		callListeners(current, null, 2);
+		// callListeners(null, model, 3);
+		// callListeners(current, null, 2);
+		setFramePath(current);
 	}
 
 	/**
@@ -353,9 +415,11 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 			if (documents.size() != 0) {
 				if (this.getSelectedIndex() != -1) {
-					callListeners(documents.get(this.getSelectedIndex()), current, 1);
+					// callListeners(documents.get(this.getSelectedIndex()), current, 1);
+					setFramePath(documents.get(this.getSelectedIndex()));
 				} else {
-					callListeners(documents.get(0), current, 1);
+					// callListeners(documents.get(0), current, 1);
+					setFramePath(documents.get(0));
 				}
 
 				current = documents.get(this.getSelectedIndex());
@@ -363,48 +427,50 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		});
 	}
 
-	/**
-	 * Method is called when modification status is changed
-	 * 
-	 * @param model
-	 *            - changed document
-	 */
-	@Override
-	public void documentModifyStatusUpdated(SingleDocumentModel model) {
-		// for (SingleDocumentModel document : documents) {
-		// if (document.equals(model)) {
-		// System.out.println(model.getFilePath());
-		// document = model;
-		// document.setModified(true);
-		// changeListener(document, model);
-		// }
-		// }
-
-		SingleDocumentModel doc = documents.get(documents.indexOf(model));
-		changeListener(doc, model);
-		this.setIconAt(documents.indexOf(doc), unsaved);
-
-		callListeners(model, doc, 1);
-	}
-
-	/**
-	 * Method is called when document path is changed
-	 * 
-	 * @param model
-	 *            - changed document
-	 */
-	@Override
-	public void documentFilePathUpdated(SingleDocumentModel model) {
-
-		SingleDocumentModel doc = documents.get(documents.indexOf(model));
-		System.out.println(model.getFilePath().toString());
-
-		if (!doc.getFilePath().equals(model.getFilePath())) {
-			doc.setFilePath(model.getFilePath());
-			changeListener(doc, model);
-			callListeners(model, doc, 1);
+	private void setFramePath(SingleDocumentModel model) {
+		if (model != null) {
+			if (model.getFilePath() != null) {
+				frame.setTitle(model.getFilePath().getFileName().toString());
+			} else {
+				frame.setTitle("");
+			}
 		}
 	}
+
+	// /**
+	// * Method is called when modification status is changed
+	// *
+	// * @param model
+	// * - changed document
+	// */
+	// @Override
+	// public void documentModifyStatusUpdated(SingleDocumentModel model) {
+	//
+	// // SingleDocumentModel doc = documents.get(documents.indexOf(model));
+	// // changeListener(doc, model);
+	// // this.setIconAt(documents.indexOf(doc), unsaved);
+	//
+	// callListeners(model, doc, 1);
+	// }
+
+	// /**
+	// * Method is called when document path is changed
+	// *
+	// * @param model
+	// * - changed document
+	// */
+	// @Override
+	// public void documentFilePathUpdated(SingleDocumentModel model) {
+	//
+	// SingleDocumentModel doc = documents.get(documents.indexOf(model));
+	// System.out.println(model.getFilePath().toString());
+	//
+	// if (!doc.getFilePath().equals(model.getFilePath())) {
+	// doc.setFilePath(model.getFilePath());
+	// changeListener(doc, model);
+	// callListeners(model, doc, 1);
+	// }
+	// }
 
 	/**
 	 * Method switches listener from one {@link SingleDocumentModel} to other
@@ -415,8 +481,48 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	 *            - new document
 	 */
 	private void changeListener(SingleDocumentModel previous, SingleDocumentModel next) {
-		previous.removeSingleDocumentListener(this);
-		next.addSingleDocumentListener(this);
+		previous.removeSingleDocumentListener(listener);
+		next.addSingleDocumentListener(listener);
+	}
+
+	/**
+	 * Method refreshes status bar with updated informations
+	 * 
+	 * @param source
+	 *            - {@link JTextArea}
+	 */
+	private void calculateBar(JTextArea source) {
+		try {
+			StatusBar statusBar = frame.getStatusBar();
+			int line = source.getLineOfOffset(source.getCaretPosition());
+
+			statusBar.setLength(source.getDocument().getLength());
+			statusBar.setLn(line + 1);
+			statusBar.setCol(source.getCaretPosition() - source.getLineStartOffset(line) + 1);
+			statusBar.setSel(Math.abs(source.getCaret().getDot() - source.getCaret().getMark()));
+
+			if (statusBar.getSel() == 0 || statusBar.getLength() == 0) {
+				updateMenus(false);
+			} else {
+				updateMenus(true);
+			}
+
+		} catch (Exception e) {
+
+		}
+	}
+
+	private void updateMenus(boolean flag) {
+		if (frame.getSortMenu() != null) {
+			if (!flag) {
+				frame.getSortMenu().setEnabled(false);
+				frame.getCaseMenu().setEnabled(false);
+			} else {
+				frame.getSortMenu().setEnabled(true);
+				frame.getCaseMenu().setEnabled(true);
+			}
+		}
+
 	}
 
 }
