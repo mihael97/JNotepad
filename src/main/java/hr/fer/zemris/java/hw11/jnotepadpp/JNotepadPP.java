@@ -389,9 +389,9 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 		caseMenu = new LocalizedJMenu("case", provider);
 		tool.add(caseMenu);
 
-		addItem(upperCaseChange, caseMenu, toolBar);
-		addItem(lowerCaseChange, caseMenu, toolBar);
-		addItem(invertCaseChange, caseMenu, toolBar);
+		addItem(upperCaseChange, caseMenu, null);
+		addItem(lowerCaseChange, caseMenu, null);
+		addItem(invertCaseChange, caseMenu, null);
 
 		// Sort submenu
 		sortMenu = new LocalizedJMenu("sort", provider);
@@ -400,9 +400,9 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 
 		toolBar.addSeparator();
 
-		addItem(ascendingAction, sortMenu, toolBar);
-		addItem(descendignAction, sortMenu, toolBar);
-		addItem(uniqueAction, sortMenu, toolBar);
+		addItem(ascendingAction, sortMenu, null);
+		addItem(descendignAction, sortMenu, null);
+		addItem(uniqueAction, sortMenu, null);
 	}
 
 	/**
@@ -417,7 +417,9 @@ public class JNotepadPP extends JFrame {// implements MultipleDocumentListener, 
 	 */
 	private void addItem(Action action, LocalizedJMenu menu, JToolBar toolBar) {
 		menu.add(new LocalizedJMenuItem(action, provider));
-		toolBar.add(new LocalizedJButton(action, provider));
+		if (toolBar != null) {
+			toolBar.add(new LocalizedJButton(action, provider));
+		}
 	}
 
 	/**
