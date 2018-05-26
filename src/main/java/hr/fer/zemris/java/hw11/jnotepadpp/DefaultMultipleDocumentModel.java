@@ -56,11 +56,8 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	private ImageIcon unsaved;
 
 	/**
-	 * Reference to frame where this {@link DefaultMultipleDocumentModel} is
-	 * component
+	 * Reference to {@link SingleDocumentListener}
 	 */
-	// private JNotepadPP frame;
-
 	SingleDocumentListener listener = new SingleDocumentListener() {
 
 		@Override
@@ -111,7 +108,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		try {
 			is.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -156,10 +152,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 	@Override
 	public SingleDocumentModel createNewDocument() {
 		DefaultSingleDocumentModel model = new DefaultSingleDocumentModel(null, "");
-		// model.addSingleDocumentListener(this);
-		// documents.add(model);
-		// model.setModified(true);
-		// callListeners(model, null, 2);
 		current = model;
 
 		this.add("new", new JScrollPane(model.getTextComponent()));
@@ -168,20 +160,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		this.setSelectedIndex(documents.size() - 1);
 		this.setIconAt(this.getSelectedIndex(), unsaved);
 
-		// model.addSingleDocumentListener(new SingleDocumentListener() {
-		//
-		// @Override
-		// public void documentModifyStatusUpdated(SingleDocumentModel model) {
-		// SingleDocumentModel doc = documents.get(documents.indexOf(model));
-		// changeListener(doc, model);
-		// DefaultMultipleDocumentModel.this.setIconAt(documents.indexOf(doc), unsaved);
-		// }
-		//
-		// @Override
-		// public void documentFilePathUpdated(SingleDocumentModel model) {
-		//
-		// }
-		// });
 		model.addSingleDocumentListener(listener);
 		model.setModified(true);
 
@@ -239,11 +217,7 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 
 		model.addSingleDocumentListener(listener);
 		model.setModified(false);
-
-		// callListeners(documents.get(this.getSelectedIndex()), current, 1);
 		current = model;
-
-		// current = model;
 
 		return model;
 
@@ -276,7 +250,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		model.setModified(false);
 		this.setTitleAt(this.getSelectedIndex(), newPath.getFileName().toString());
 		this.setIconAt(this.getSelectedIndex(), saved);
-		// callListeners(model, current, 1);
 		current = model;
 	}
 
@@ -304,8 +277,6 @@ public class DefaultMultipleDocumentModel extends JTabbedPane implements Multipl
 		listeners.forEach(e -> e.currentDocumentChanged(model, current));
 
 		this.remove(this.getSelectedComponent());
-		// callListeners(null, model, 3);
-		// callListeners(current, null, 2);
 	}
 
 	/**

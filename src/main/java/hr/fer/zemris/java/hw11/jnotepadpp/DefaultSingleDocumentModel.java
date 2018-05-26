@@ -205,8 +205,6 @@ public class DefaultSingleDocumentModel implements SingleDocumentModel {
 		if (obj instanceof DefaultSingleDocumentModel) {
 			DefaultSingleDocumentModel doc = (DefaultSingleDocumentModel) obj;
 
-			// return path == null && doc.getFilePath() == null ||
-			// doc.getFilePath().equals(path);
 			if (doc.getFilePath() == null || path == null) {
 				return doc.getFilePath() == null && path == null;
 			} else {

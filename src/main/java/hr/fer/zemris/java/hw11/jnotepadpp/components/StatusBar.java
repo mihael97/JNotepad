@@ -58,6 +58,7 @@ public class StatusBar extends JToolBar {
 		sel = new JLabel("Sel: 0");
 		array = new int[] { 0, 0, 0, 0 };
 
+		LocalizationProvider.getInstance().addLocalizationListner(() -> setLength(array[0]));
 		initGUI();
 	}
 
@@ -70,8 +71,8 @@ public class StatusBar extends JToolBar {
 
 		setBorder(BorderFactory.createEtchedBorder());
 		setFloatable(true);
-		JPanel panel=new JPanel();
-		add(panel,BorderLayout.LINE_START);
+		JPanel panel = new JPanel();
+		add(panel, BorderLayout.LINE_START);
 		panel.add(length);
 		addSeparator();
 		panel.add(ln);
